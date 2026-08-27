@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="tr" data-bs-theme="light" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{parcalar/duzen :: kafa('Gelişmiş Birleştirme')}"></th:block>
+</head>
+<body>
+
+<th:block th:replace="~{parcalar/duzen :: ustcubuk}"></th:block>
+<th:block th:replace="~{parcalar/duzen :: adimlar(5)}"></th:block>
+
+<main class="container-xl tc-sayfa">
+
+    <div class="mb-4">
+        <span class="tc-etiket">FIELD-LEVEL SURVIVORSHIP</span>
+        <h1 class="mt-2 mb-1">Ana Kayıt Oluştur</h1>
+        <p class="tc-not">
+            <strong th:text="${kume.kayitSayisi}">0</strong> kayıt aynı firmayı gösteriyor olabilir.
+            Ana kayıt bu kayıtlardan <em>biri değil</em>; her alan için ayrı ayrı seçtiklerinizden
+            <strong>sentezlenen yeni bir kayıttır</strong>. Birinde telefon, ötekinde e-posta varsa
+            ana kayıtta ikisi de bulunur.
+        </p>
+    </div>
+
+    <div class="tc-yigin">
+
+        <div class="tc-kutu tc-kutu-bilgi">
+            <div class="tc-kutu-baslik">Değerler onarım motorundan geçirildi</div>
+            <p class="mb-2">
+                Seçenekler ham hâliyle değil, <strong>temizlenmiş hâliyle</strong> sunuluyor:
+                boşluklar düzeltildi, e-posta / telefon / web adresi kendi onarıcısından geçti.
+                Amaç, temizlenebilir bir kirin ana kayda taşınmaması.
+            </p>
+            <p class="mb-0">
+                Bir değer değiştiyse yanında <span class="badge tc-rozet-mor">✨ Onarıldı</span>
+                rozeti ve altında <strong>ham hâli</strong> görünüyor. Sessizce değişen veriye
+                güvenilmez; ne değiştiğini görebilmelisiniz.
+            </p>
+        </div>
+
+        <form th:action="@{/birlestir/gelismis}" method="post">
+            <input type="hidden" name="anahtar" th:value="${kume.anahtar}"/>
+
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <span class="tc-etiket">KÜME</span>
+                        <h2 class="mt-1" th:text="${kume.etiket}">firma</h2>
+                    </div>
+                    <div class="d-flex gap-1 flex-wrap">
+                        <span class="badge tc-sayac"><span th:text="${kume.kayitSayisi}">0</span> kayıt</span>
+                        <span class="badge tc-rozet-mor" th:text="${kume.altinKayitKimligi}">AK-</span>
+                    </div>
+                </div>
+
+                <div class="card-body tc-tablo-govde">
+                    <div class="tc-kaydir">
+                        <table class="table align-middle">
+                            <thead>
+                            <tr>
+                                <th style="width:16%;">Alan</th>
+                                <!-- Kümede kaç kayıt varsa o kadar sütun; sayı sabit değil. -->
+                                <th th:each="kimlik, d : ${kume.kimlikler}">
+                                    <span th:text="${d.count} + '. kayıt'">1. kayıt</span>
+                                    <span class="d-block tc-not" style="font-size:.7rem; text-transform:none;
+                                          letter-spacing:0; font-weight:400;" th:text="${kimlik}">kimlik</span>
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="secenek : ${secenekler}">
+                                <td>
+                                    <strong th:text="${secenek.kolonAdi}">kolon</strong>
+                                    <span class="d-block" th:if="${!secenek.farkVarMi}">
+                                        <span class="badge tc-rozet-notr" style="font-size:.65rem;">fark yok</span>
+                                    </span>
+                                </td>
+
+                                <td th:each="deger, d : ${secenek.degerler}">
+                                    <label class="tc-secim d-flex align-items-start gap-2 h-100">
+                                        <input class="form-check-input mt-1 flex-shrink-0" type="radio"
+                                               th:name="'secim_' + ${secenek.kolonAdi}"
+                                               th:value="${d.index}"
+                                               th:checked="${d.index == secenek.onerilenIndeks}"/>
+                                        <span class="flex-grow-1" style="min-width:0;">
+                                            <span th:if="${deger.bosMu}" class="tc-bos d-block text-start">boş</span>
+                                            <span th:unless="${deger.bosMu}" style="word-break:break-word;"
+                                                  th:text="${deger.temizDeger}">değer</span>
+
+                                            <!-- Veri şeffaflığı: neyin, hangi onarıcıyla değiştiği -->
+                                            <span th:if="${deger.onarildi}" class="d-block mt-1">
+                                                <span class="badge tc-rozet-mor" style="font-size:.65rem;"
+                                                      th:title="${deger.onariciAdi}">✨ Onarıldı</span>
+                                                <span class="d-block tc-not" style="font-size:.7rem;">
+                                                    ham: <code th:text="${deger.hamDeger == null or deger.hamDeger.isBlank()}
+                                                                        ? '(boş)' : ${deger.hamDeger}">ham</code>
+                                                </span>
+                                            </span>
+
+                                            <span th:if="${d.index == secenek.onerilenIndeks}"
+                                                  class="badge tc-rozet-iyi mt-1" style="font-size:.65rem;">önerilen</span>
+                                        </span>
+                                    </label>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tc-kutu tc-kutu-uyari mt-4">
+                <div class="tc-kutu-baslik">Ne yazılacak, ne yazılmayacak</div>
+                Ana kayıt <strong>kaynak tabloya eklenmiyor.</strong> Aracın kendi tablosunda,
+                kolon başına bir satır olarak saklanıyor ve her satır o değerin hangi kaynak
+                kayıttan geldiğini de taşıyor. Kümedeki kayıtların hiçbiri silinmiyor;
+                çapraz referans tablosunda bu ana kayda bağlanıp pasife çekiliyorlar.
+            </div>
+
+            <div class="tc-islem-cubugu mt-4">
+                <button class="btn btn-primary" type="submit">Ana kaydı oluştur</button>
+                <a class="btn btn-outline-secondary" th:href="@{/birlestir/iptal}">Vazgeç</a>
+            </div>
+        </form>
+
+    </div>
+</main>
+
+<th:block th:replace="~{parcalar/duzen :: altbilgi}"></th:block>
+</body>
+</html>
