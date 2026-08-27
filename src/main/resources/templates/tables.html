@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="tr" data-bs-theme="light" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{parcalar/duzen :: kafa('Tablo Seçimi')}"></th:block>
+</head>
+<body>
+
+<th:block th:replace="~{parcalar/duzen :: ustcubuk}"></th:block>
+<th:block th:replace="~{parcalar/duzen :: adimlar(2)}"></th:block>
+
+<main class="container-xl tc-sayfa">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+
+            <span class="tc-etiket">ADIM 2 / 9</span>
+            <h1 class="mt-2 mb-4">Hangi tabloyu inceleyelim?</h1>
+
+            <div class="card">
+                <div class="card-body p-4">
+                    <form th:action="@{/tablolar}" method="post">
+                        <label class="form-label" for="tabloAdi">Tablo</label>
+                        <select class="form-select" id="tabloAdi" name="tabloAdi" size="12">
+                            <option th:each="tablo : ${tablolar}"
+                                    th:value="${tablo}" th:text="${tablo}">tablo_adi</option>
+                        </select>
+                        <div class="form-text mt-2">
+                            Şemadaki <strong th:text="${#lists.size(tablolar)}">0</strong> tablo listeleniyor.
+                            Seçtiğiniz tablo baştan sona okunur; büyük tablolarda analiz birkaç saniye sürebilir.
+                        </div>
+
+                        <div class="tc-islem-cubugu mt-4">
+                            <button class="btn btn-primary" type="submit">Devam et</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<th:block th:replace="~{parcalar/duzen :: altbilgi}"></th:block>
+</body>
+</html>

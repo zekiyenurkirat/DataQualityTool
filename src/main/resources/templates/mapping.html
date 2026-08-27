@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="tr" data-bs-theme="light" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{parcalar/duzen :: kafa('Kolon Eşleştirme')}"></th:block>
+</head>
+<body>
+
+<th:block th:replace="~{parcalar/duzen :: ustcubuk}"></th:block>
+<th:block th:replace="~{parcalar/duzen :: adimlar(3)}"></th:block>
+
+<main class="container-xl tc-sayfa">
+    <div class="row justify-content-center">
+        <div class="col-xl-9">
+
+            <span class="tc-etiket">ADIM 3 / 9</span>
+            <h1 class="mt-2 mb-1">Kolon Eşleştirme</h1>
+            <p class="tc-not mb-4">
+                Araç kolon adlarını tahmin etmiyor. Hangi kolonun firma adı, hangisinin telefon
+                olduğunu siz söylüyorsunuz — eşleştirmediğiniz alan hiç denetlenmez ve kalite
+                puanına da girmez.
+            </p>
+
+            <div th:if="${hata}" class="tc-kutu tc-kutu-tehlike mb-4">
+                <div class="tc-kutu-baslik">Eşleştirme kabul edilmedi</div>
+                <div th:text="${hata}">hata mesajı</div>
+            </div>
+
+            <form th:action="@{/eslestirme}" method="post">
+                <div class="tc-yigin">
+
+                    <!-- Kimlik ve ülke: diğer alanların davranışını belirlediği için ayrı kart -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <span class="tc-etiket">TEMEL</span>
+                                <h2 class="mt-1">Kimlik ve ülke</h2>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label class="form-label" for="idKolonu">ID kolonu</label>
+                                    <select class="form-select" id="idKolonu" name="idKolonu">
+                                        <option value="">— Seçiniz —</option>
+                                        <option th:each="kolon : ${kolonlar}"
+                                                th:value="${kolon.kolonAdi}" th:text="${kolon.kolonAdi}">kolon</option>
+                                    </select>
+                                    <div class="form-text">
+                                        Seçilmezse eşleştirilen alanlardan kimlik üretilir. Üretilen kimlik
+                                        veritabanında bulunmadığı için telefon ve e-posta onarımı çalışmaz.
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="ulkeKodu">Ülke</label>
+                                    <select class="form-select" id="ulkeKodu" name="ulkeKodu">
+                                        <option value="">— Seçiniz —</option>
+                                        <option th:each="ulke : ${ulkeler}"
+                                                th:value="${ulke.kod}" th:text="${ulke.ad}"
+                                                th:selected="${ulke.kod == tahminEdilenUlkeKodu}">ülke</option>
+                                    </select>
+                                    <div class="form-text">
+                                        Telefon kontrolü için gerekli. Tablo adından tahmin edildiyse hazır seçilidir.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Denetlenecek alanlar -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <span class="tc-etiket">DENETLENECEK ALANLAR</span>
+                                <h2 class="mt-1">Hangi kolon hangi bilgi?</h2>
+                            </div>
+                            <span class="badge tc-sayac">
+                                <span th:text="${#lists.size(kolonlar)}">0</span> kolon var
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label class="form-label" for="firmaAdiKolonu">Firma adı kolonu</label>
+                                    <select class="form-select" id="firmaAdiKolonu" name="firmaAdiKolonu">
+                                        <option value="">— Seçiniz —</option>
+                                        <option th:each="kolon : ${kolonlar}"
+                                                th:value="${kolon.kolonAdi}" th:text="${kolon.kolonAdi}">kolon</option>
+                                    </select>
+                                    <div class="form-text">Kopya ve benzer kayıt taraması bu kolon üzerinden yapılır.</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="ePostaKolonu">E-posta kolonu</label>
+                                    <select class="form-select" id="ePostaKolonu" name="ePostaKolonu">
+                                        <option value="">— Seçiniz —</option>
+                                        <option th:each="kolon : ${kolonlar}"
+                                                th:value="${kolon.kolonAdi}" th:text="${kolon.kolonAdi}">kolon</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="telefonKolonu">Telefon kolonu</label>
+                                    <select class="form-select" id="telefonKolonu" name="telefonKolonu">
+                                        <option value="">— Seçiniz —</option>
+                                        <option th:each="kolon : ${kolonlar}"
+                                                th:value="${kolon.kolonAdi}" th:text="${kolon.kolonAdi}">kolon</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="webSitesiKolonu">Web sitesi kolonu</label>
+                                    <select class="form-select" id="webSitesiKolonu" name="webSitesiKolonu">
+                                        <option value="">— Seçiniz —</option>
+                                        <option th:each="kolon : ${kolonlar}"
+                                                th:value="${kolon.kolonAdi}" th:text="${kolon.kolonAdi}">kolon</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Adres: çoklu seçim olduğu ve yanlış seçim puanın anlamını
+                         değiştirdiği için kendi kartında duruyor. -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <span class="tc-etiket">ADRES</span>
+                                <h2 class="mt-1">Adres kolonları</h2>
+                            </div>
+                            <span class="badge tc-rozet-mor">Birden fazla seçilebilir</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-4">
+                                <div class="col-md-5">
+                                    <select class="form-select" id="adresKolonlari" name="adresKolonlari"
+                                            multiple size="8">
+                                        <option th:each="kolon : ${kolonlar}"
+                                                th:value="${kolon.kolonAdi}" th:text="${kolon.kolonAdi}">kolon</option>
+                                    </select>
+                                    <div class="form-text">Ctrl (Mac'te Cmd) ile tıklayarak birden fazla seçin.</div>
+                                </div>
+                                <div class="col-md-7">
+                                    <div class="tc-kutu tc-kutu-bilgi">
+                                        <div class="tc-kutu-baslik">Hepsini seçin, tekini değil</div>
+                                        <p class="mb-2">
+                                            Bazı tablolar adresi tek kolonda tutar, bazıları şehir / mahalle /
+                                            sokak / kapı no diye ayırır. Ayrılmışsa <strong>hepsini seçin.</strong>
+                                        </p>
+                                        <p class="mb-0">
+                                            Yalnızca şehri seçerseniz adres puanı <em>“aynı adres”</em> değil
+                                            <em>“aynı şehir”</em> ölçer — 1,000 puan gördüğünüzde iki kaydın
+                                            aynı binada olduğunu sanırsınız, oysa yalnızca aynı şehirdedirler.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tc-islem-cubugu">
+                        <button class="btn btn-primary" type="submit">Kontrol et</button>
+                        <a class="btn btn-outline-secondary" th:href="@{/tablolar}">Tablo değiştir</a>
+                    </div>
+
+                </div>
+            </form>
+
+        </div>
+    </div>
+</main>
+
+<th:block th:replace="~{parcalar/duzen :: altbilgi}"></th:block>
+</body>
+</html>
