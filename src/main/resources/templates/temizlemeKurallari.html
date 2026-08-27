@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="tr" data-bs-theme="light" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{parcalar/duzen :: kafa('Temizleme Kuralları')}"></th:block>
+</head>
+<body>
+
+<th:block th:replace="~{parcalar/duzen :: ustcubuk}"></th:block>
+<th:block th:replace="~{parcalar/duzen :: adimlar(7)}"></th:block>
+
+<main class="container-xl tc-sayfa">
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
+
+            <span class="tc-etiket">ADIM 7 / 9 · TEMİZLEME</span>
+            <h1 class="mt-2 mb-1">Temizleme kurallarını belirleyin</h1>
+            <p class="tc-not mb-4">
+                Her kolon için ayrı kural seçilir. Seçtikleriniz sırayla uygulanır:
+                <strong>karakter silme → boşluk daraltma → kırpma → harf dönüşümü.</strong>
+                Bir sonraki adımda ne değişeceğini satır satır göreceksiniz; onaydan önce
+                veritabanına hiçbir şey yazılmaz.
+            </p>
+
+            <div class="tc-yigin mb-4">
+                <div th:if="${!kimlikKolonuVar}" class="tc-kutu tc-kutu-uyari">
+                    <div class="tc-kutu-baslik">Telefon ve e-posta onarımı bu tabloda kullanılamaz</div>
+                    Eşleştirme ekranında bir ID kolonu seçilmedi. Bu iki işlem satır satır güncellendiği için
+                    veritabanında gerçekten var olan bir kimlik kolonuna ihtiyaç duyuyor; araç tarafından
+                    üretilen kimlikler veritabanında bulunmadığı için güncelleme yapılamıyor.
+                    Metin temizliği (boşluk, karakter, harf dönüşümü) kimlik gerektirmediği için normal çalışır.
+                </div>
+
+                <div th:if="${!ulkeSecildi}" class="tc-kutu tc-kutu-uyari">
+                    <div class="tc-kutu-baslik">Telefon formatı düzeltmesi ülke seçilmeden çalışmaz</div>
+                    Eşleştirme ekranında ülke seçilmedi. Bir numaranın hangi ülkeye ait olduğu bilinmeden
+                    alan kodu çözülemediği için, başında <code>+</code> bulunmayan numaralar ayrıştırılamıyor.
+                </div>
+            </div>
+
+            <form th:action="@{/temizleme/kurallar}" method="post">
+                <div class="tc-yigin">
+
+                    <div class="card" th:each="kural, durum : ${plan.temizlemeKurallari}">
+                        <div class="card-header">
+                            <div>
+                                <span class="tc-etiket">KOLON</span>
+                                <h2 class="mt-1" th:text="${kural.kolonAdi}">kolon</h2>
+                            </div>
+                            <div class="d-flex gap-1 flex-wrap">
+                                <span class="badge tc-rozet-mor" th:if="${kural.kolonAdi == epostaKolonu}">E-posta</span>
+                                <span class="badge tc-rozet-mor" th:if="${kural.kolonAdi == webSitesiKolonu}">Web adresi</span>
+                                <span class="badge tc-rozet-mor" th:if="${kural.kolonAdi == telefonKolonu}">Telefon</span>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <input type="hidden"
+                                   th:name="'temizlemeKurallari[' + ${durum.index} + '].kolonAdi'"
+                                   th:value="${kural.kolonAdi}"/>
+
+                            <div class="row g-4">
+
+                                <!-- Boşluklar -->
+                                <div class="col-md-6">
+                                    <span class="tc-etiket">BOŞLUKLAR</span>
+                                    <div class="mt-2 d-flex flex-column gap-2">
+                                        <label class="tc-secim d-flex align-items-start gap-2">
+                                            <input class="form-check-input mt-1 flex-shrink-0" type="checkbox"
+                                                   th:name="'temizlemeKurallari[' + ${durum.index} + '].bosluklariKirp'"
+                                                   value="true" checked/>
+                                            <span>
+                                                Baştaki ve sondaki boşlukları sil
+                                                <span class="d-block tc-not" style="font-size:.8125rem;">
+                                                    <code>&nbsp;Ahmet&nbsp;</code> → <code>Ahmet</code>
+                                                </span>
+                                            </span>
+                                        </label>
+                                        <label class="tc-secim d-flex align-items-start gap-2">
+                                            <input class="form-check-input mt-1 flex-shrink-0" type="checkbox"
+                                                   th:name="'temizlemeKurallari[' + ${durum.index} + '].ardisikBosluklariDaralt'"
+                                                   value="true" checked/>
+                                            <span>
+                                                Ortadaki ardışık boşlukları teke indir
+                                                <span class="d-block tc-not" style="font-size:.8125rem;">
+                                                    <code>Ahmet&nbsp;&nbsp;Ticaret</code> → <code>Ahmet Ticaret</code>
+                                                </span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Silinecek karakterler -->
+                                <div class="col-md-6">
+                                    <span class="tc-etiket">SİLİNECEK KARAKTERLER</span>
+                                    <div class="mt-2">
+                                        <input class="form-control" type="text"
+                                               th:name="'temizlemeKurallari[' + ${durum.index} + '].haricTutulacakKarakter'"
+                                               placeholder="örn: #@!|" autocomplete="off"/>
+                                        <div class="form-text">
+                                            Silmek istediğiniz karakterleri yan yana yazın.
+                                            Boş bırakırsanız hiçbir karakter silinmez.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Harf dönüşümü -->
+                                <div class="col-12">
+                                    <span class="tc-etiket">HARF DÖNÜŞÜMÜ</span>
+                                    <div class="row g-3 mt-0 align-items-start">
+                                        <div class="col-md-4">
+                                            <select class="form-select"
+                                                    th:name="'temizlemeKurallari[' + ${durum.index} + '].harfDonusumu'">
+                                                <option th:each="secenek : ${harfDonusumleri}"
+                                                        th:value="${secenek.name()}" th:text="${secenek.etiket}">seçenek</option>
+                                            </select>
+                                            <div class="form-text">
+                                                Arapçada büyük/küçük harf kavramı yok, o kolonlarda bu seçenek
+                                                bir şey değiştirmez. Kiril ve Latin alfabelerinde doğru çalışır.
+                                            </div>
+                                        </div>
+                                        <div class="col-md-8">
+                                            <div class="tc-kutu tc-kutu-tehlike">
+                                                <div class="tc-kutu-baslik">Türkçe metinde kullanmayın</div>
+                                                Dönüşüm veritabanının dil ayarına göre yapılıyor ve o ayar Türkçe değil:
+                                                <code>ışık</code> büyütülünce <code>IŞIK</code> değil
+                                                <code>ıŞıK</code> oluyor. Noktasız <strong>ı</strong> harfinin karşılığı
+                                                bulunamadığı için olduğu gibi kalıyor, sonuç bozuk çıkıyor.
+                                                <strong>Bu işlem geri alınamaz.</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- E-posta onarımı -->
+                                <div class="col-12" th:if="${kural.kolonAdi == epostaKolonu}">
+                                    <span class="tc-etiket">E-POSTA</span>
+                                    <label class="tc-secim d-flex align-items-start gap-2 mt-2">
+                                        <input class="form-check-input mt-1 flex-shrink-0" type="checkbox"
+                                               th:name="'temizlemeKurallari[' + ${durum.index} + '].epostaOnarimiUygulanacakMi'"
+                                               value="true"/>
+                                        <span>
+                                            <strong>Bozuk e-posta adresleri onarılsın</strong>
+                                            <span class="d-block tc-not mt-1">
+                                                İç boşlukları, tekrarlayan <code>@@</code> ve <code>..</code> işaretlerini,
+                                                baştaki ve sondaki noktalamayı temizler.
+                                                <strong>Yalnızca fazlalığı kaldırır</strong> — eksik alan adı veya eksik
+                                                <code>@</code> uydurulmaz. Onarım sonucu geçerli bir adres değilse satır
+                                                değiştirilmeden bırakılır.
+                                            </span>
+                                        </span>
+                                    </label>
+                                </div>
+
+                                <!-- Web adresi -->
+                                <div class="col-12" th:if="${kural.kolonAdi == webSitesiKolonu}">
+                                    <span class="tc-etiket">WEB ADRESİ</span>
+                                    <label class="tc-secim d-flex align-items-start gap-2 mt-2">
+                                        <input class="form-check-input mt-1 flex-shrink-0" type="checkbox"
+                                               th:name="'temizlemeKurallari[' + ${durum.index} + '].websiteOnarimiUygulanacakMi'"
+                                               value="true"/>
+                                        <span>
+                                            <strong>Web adresleri standart biçime getirilsin</strong>
+                                            <span class="d-block tc-not mt-1">
+                                                Şemayı ve alan adını küçültür, varsayılan portu ve alan adından sonraki
+                                                tek eğik çizgiyi siler. <strong>Yola dokunmaz</strong> — alan adı
+                                                büyük/küçük harf duyarsızdır ama yol duyarlıdır,
+                                                <code>x.com/MyPage</code> ile <code>x.com/mypage</code> farklı
+                                                sayfalardır. Eksik <code>http://</code> de tamamlanmaz; adres
+                                                <code>https</code> de olabilir, birini seçmek uydurma olurdu.
+                                            </span>
+                                        </span>
+                                    </label>
+                                    <div class="tc-kutu tc-kutu-bilgi mt-2">
+                                        Bu kolonda <strong>Harf dönüşümü yerine bunu kullanın.</strong>
+                                        Genel dönüşüm değerin tamamını küçültür ve yolu bozar.
+                                    </div>
+                                </div>
+
+                                <!-- Telefon -->
+                                <div class="col-12" th:if="${kural.kolonAdi == telefonKolonu}">
+                                    <span class="tc-etiket">TELEFON</span>
+                                    <div class="row g-3 mt-0 align-items-center">
+                                        <div class="col-md-6">
+                                            <label class="tc-secim d-flex align-items-start gap-2">
+                                                <input class="form-check-input mt-1 flex-shrink-0" type="checkbox"
+                                                       th:name="'temizlemeKurallari[' + ${durum.index} + '].telefonFormatiUygulanacakMi'"
+                                                       value="true"/>
+                                                <span><strong>Telefon formatı uygulansın</strong></span>
+                                            </label>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <select class="form-select"
+                                                    th:name="'temizlemeKurallari[' + ${durum.index} + '].telefonHedefFormati'">
+                                                <option value="E164">E164 — +9647740905059</option>
+                                                <option value="INTERNATIONAL">INTERNATIONAL — +964 774 090 5059</option>
+                                                <option value="NATIONAL">NATIONAL — 0774 090 5059</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tc-islem-cubugu">
+                        <button class="btn btn-primary" type="submit">Önizle</button>
+                        <a class="btn btn-outline-secondary" th:href="@{/temizleme}">Kolonlara dön</a>
+                    </div>
+
+                </div>
+            </form>
+
+        </div>
+    </div>
+</main>
+
+<th:block th:replace="~{parcalar/duzen :: altbilgi}"></th:block>
+</body>
+</html>

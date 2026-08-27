@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="tr" data-bs-theme="light" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{parcalar/duzen :: kafa('Temizleme Sonucu')}"></th:block>
+</head>
+<body>
+
+<th:block th:replace="~{parcalar/duzen :: ustcubuk}"></th:block>
+<th:block th:replace="~{parcalar/duzen :: adimlar(9)}"></th:block>
+
+<main class="container-xl tc-sayfa">
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
+
+            <span class="tc-etiket">ADIM 9 / 9 · TAMAMLANDI</span>
+            <h1 class="mt-2 mb-4">Temizleme tamamlandı</h1>
+
+            <div class="tc-yigin">
+
+                <!-- Sonuç başlığı: sayı büyük, uyarı hemen altında -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center gap-3 flex-wrap">
+                            <div class="tc-genel-puan" th:text="${toplamGuncellenen}">0</div>
+                            <div>
+                                <div style="font-size:1.05rem; font-weight:600;">satır güncellendi</div>
+                                <div class="tc-not" th:if="${session != null and session.tabloAdi != null}"
+                                     th:text="'Tablo: ' + ${session.tabloAdi}">Tablo</div>
+                            </div>
+                        </div>
+                        <div class="tc-kutu tc-kutu-tehlike mt-3">
+                            <div class="tc-kutu-baslik">Bu işlem geri alınamaz</div>
+                            Aşağıdaki örnekler, değişikliğin tek kaydıdır — sayfadan ayrılırsanız
+                            eski değerlere ulaşılamaz.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kolon özeti -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <span class="tc-etiket">ÖZET</span>
+                            <h2 class="mt-1">Kolon Özeti</h2>
+                        </div>
+                    </div>
+                    <div class="card-body tc-tablo-govde">
+                        <div class="tc-kaydir">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                <tr>
+                                    <th>Kolon</th>
+                                    <th class="text-end">Güncellenen</th>
+                                    <th class="text-end">Atlanan</th>
+                                    <th class="text-end">Eşleşmeyen</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="kolonSonucu : ${sonuc.kolonSonuclari}">
+                                    <td><strong th:text="${kolonSonucu.kolonAdi}">kolon</strong></td>
+                                    <td class="tc-sayi" th:text="${kolonSonucu.guncellenenSatirSayisi}">0</td>
+                                    <td class="tc-sayi" th:text="${kolonSonucu.atlananSatirSayisi}">0</td>
+                                    <td class="tc-sayi">
+                                        <span th:if="${kolonSonucu.eslesmeyenSatirSayisi > 0}"
+                                              class="badge tc-rozet-tehlike"
+                                              th:text="${kolonSonucu.eslesmeyenSatirSayisi}">0</span>
+                                        <span th:unless="${kolonSonucu.eslesmeyenSatirSayisi > 0}"
+                                              th:text="${kolonSonucu.eslesmeyenSatirSayisi}">0</span>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-body pt-3">
+                        <div class="tc-not">
+                            <strong>Atlanan:</strong> satır hiç denenmedi — kimliği yoktu ya da numara
+                            ayrıştırılamadı.<br/>
+                            <strong>Eşleşmeyen:</strong> güncelleme gönderildi ama veritabanında o kimlikte
+                            satır bulunamadı. Bu sayı sıfırdan büyükse rapordaki güncelleme sayısı ile
+                            veritabanının gerçek durumu ayrışmış demektir.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Neyi neye çevirdik -->
+                <div>
+                    <h2 class="mb-1">Neyi neye çevirdik</h2>
+                    <p class="tc-not mb-3">
+                        Aşağıdaki örnekler uygulama öncesi önizlemeden alındı. Her kolon için ilk on
+                        değişiklik gösteriliyor; kolonun tamamı için sayılar yukarıdaki tabloda.
+                    </p>
+                </div>
+
+                <div class="card" th:each="kolonSonucu : ${sonuc.kolonSonuclari}">
+                    <div class="card-header">
+                        <div>
+                            <span class="tc-etiket">KOLON</span>
+                            <h2 class="mt-1" th:text="${kolonSonucu.kolonAdi}">kolon</h2>
+                        </div>
+                        <span class="badge tc-rozet-iyi">
+                            <span th:text="${kolonSonucu.guncellenenSatirSayisi}">0</span> güncellendi
+                        </span>
+                    </div>
+
+                    <div class="card-body" th:if="${kolonSonucu.ornekler.isEmpty()}">
+                        <div class="tc-kutu mb-0">Bu kolon için örnek kaydedilmedi.</div>
+                    </div>
+
+                    <div class="card-body tc-tablo-govde" th:unless="${kolonSonucu.ornekler.isEmpty()}">
+                        <div class="tc-kaydir tc-yapiskan-baslik" style="max-height:460px;">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                <tr>
+                                    <th style="width:18%;">Kimlik</th>
+                                    <th style="width:41%;">Eski değer</th>
+                                    <th style="width:41%;">Yeni değer</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="ornek : ${kolonSonucu.ornekler}">
+                                    <td th:text="${ornek.id != null and !ornek.id.isEmpty()} ? ${ornek.id} : '—'"
+                                        th:classappend="${ornek.id != null and !ornek.id.isEmpty()} ? '' : 'tc-bos'">—</td>
+                                    <td class="tc-eski" th:text="${ornek.eskiDeger}">eski</td>
+                                    <td class="tc-yeni" th:text="${ornek.yeniDeger}">yeni</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tc-islem-cubugu">
+                    <a class="btn btn-primary" th:href="@{/tablolar}">Tablolara dön</a>
+                    <a class="btn btn-outline-secondary" th:href="@{/eslestirme}">Yeniden analiz et</a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</main>
+
+<th:block th:replace="~{parcalar/duzen :: altbilgi}"></th:block>
+</body>
+</html>

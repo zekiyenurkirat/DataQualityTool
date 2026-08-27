@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="tr" data-bs-theme="light" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{parcalar/duzen :: kafa('Temizlenecek Kolonlar')}"></th:block>
+</head>
+<body>
+
+<th:block th:replace="~{parcalar/duzen :: ustcubuk}"></th:block>
+<th:block th:replace="~{parcalar/duzen :: adimlar(6)}"></th:block>
+
+<main class="container-xl tc-sayfa">
+    <div class="row justify-content-center">
+        <div class="col-xl-9">
+
+            <span class="tc-etiket">ADIM 6 / 9 · TEMİZLEME</span>
+            <h1 class="mt-2 mb-1">Temizlenecek kolonları seçin</h1>
+            <p class="tc-not mb-4">
+                Yalnızca metin tipindeki kolonlar listeleniyor. Eşleştirme ekranında tanımladığınız
+                alanlar hazır işaretli gelir; dilediğinizi ekleyip çıkarabilirsiniz. Bu ekranda hiçbir
+                şey değişmez — kural belirleme ve önizleme adımları var.
+            </p>
+
+            <div th:if="${hata}" class="tc-kutu tc-kutu-tehlike mb-4">
+                <div class="tc-kutu-baslik">Devam edilemedi</div>
+                <div th:text="${hata}">hata mesajı</div>
+            </div>
+
+            <form th:action="@{/temizleme}" method="post">
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <span class="tc-etiket">METİN KOLONLARI</span>
+                            <h2 class="mt-1">Kolonlar</h2>
+                        </div>
+                        <span class="badge tc-sayac">
+                            <span th:text="${#lists.size(kolonlar)}">0</span> kolon
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-2">
+                            <div class="col" th:each="kolon : ${kolonlar}">
+                                <label class="tc-secim d-flex align-items-start gap-2 h-100">
+                                    <input class="form-check-input mt-1 flex-shrink-0" type="checkbox"
+                                           name="secilenKolonlar" th:value="${kolon.kolonAdi}"
+                                           th:checked="${onerilenKolonlar.contains(kolon.kolonAdi)}"/>
+                                    <span>
+                                        <strong th:text="${kolon.kolonAdi}">kolon</strong>
+                                        <span class="badge tc-rozet-mor ms-1"
+                                              th:if="${onerilenKolonlar.contains(kolon.kolonAdi)}">eşleştirildi</span>
+                                        <span class="d-block tc-not" style="font-size:.8125rem;"
+                                              th:text="${kolon.veriTipi}">tip</span>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tc-islem-cubugu mt-4">
+                    <button class="btn btn-primary" type="submit">Devam et</button>
+                    <a class="btn btn-outline-secondary" th:href="@{/tablolar}">Vazgeç</a>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</main>
+
+<th:block th:replace="~{parcalar/duzen :: altbilgi}"></th:block>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="tr" data-bs-theme="light" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{parcalar/duzen :: kafa('Temizleme Önizlemesi')}"></th:block>
+</head>
+<body>
+
+<th:block th:replace="~{parcalar/duzen :: ustcubuk}"></th:block>
+<th:block th:replace="~{parcalar/duzen :: adimlar(8)}"></th:block>
+
+<main class="container-xl tc-sayfa">
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
+
+            <span class="tc-etiket">ADIM 8 / 9 · TEMİZLEME</span>
+            <h1 class="mt-2 mb-1">Temizleme önizlemesi</h1>
+            <p class="tc-not mb-4">
+                Aşağıdakiler henüz <strong>uygulanmadı.</strong> Her kolon için kaç satırın değişeceği ve
+                ilk örneklerin eski/yeni hâli gösteriliyor. Onayladığınızda değişiklik veritabanına yazılır
+                ve <strong>geri alınamaz.</strong>
+            </p>
+
+            <div class="tc-yigin">
+
+                <div class="card" th:each="onizleme : ${onizlemeler}">
+                    <div class="card-header">
+                        <div>
+                            <span class="tc-etiket">KOLON</span>
+                            <h2 class="mt-1" th:text="${onizleme.kolonAdi}">kolon</h2>
+                        </div>
+                        <span class="badge"
+                              th:classappend="${onizleme.etkilenecekSatirSayisi} > 0 ? 'tc-rozet-uyari' : 'tc-rozet-notr'">
+                            <span th:text="${onizleme.etkilenecekSatirSayisi}">0</span> satır değişecek
+                        </span>
+                    </div>
+
+                    <div class="card-body tc-tablo-govde">
+                        <div class="tc-kaydir tc-yapiskan-baslik" style="max-height:460px;">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                <tr>
+                                    <th style="width:18%;">Kimlik</th>
+                                    <th style="width:41%;">Eski değer</th>
+                                    <th style="width:41%;">Yeni değer</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="ornek : ${onizleme.ornekler}">
+                                    <td th:text="${ornek.id != null and !ornek.id.isEmpty()} ? ${ornek.id} : '—'"
+                                        th:classappend="${ornek.id != null and !ornek.id.isEmpty()} ? '' : 'tc-bos'">—</td>
+                                    <td class="tc-eski" th:text="${ornek.eskiDeger}">eski</td>
+                                    <td class="tc-yeni" th:text="${ornek.yeniDeger}">yeni</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tc-kutu tc-kutu-tehlike">
+                    <div class="tc-kutu-baslik">Onaylamadan önce</div>
+                    Değişiklik doğrudan veritabanına yazılır; aracın geri alma özelliği yok.
+                    Canlı bir tabloda çalışıyorsanız önce yedeğini almış olun.
+                </div>
+
+                <div class="tc-islem-cubugu">
+                    <form th:action="@{/temizleme/uygula}" method="post" class="d-inline">
+                        <button class="btn btn-danger" type="submit">Onayla ve uygula</button>
+                    </form>
+                    <a class="btn btn-outline-secondary" th:href="@{/temizleme/kurallar}">Vazgeç, kurallara dön</a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</main>
+
+<th:block th:replace="~{parcalar/duzen :: altbilgi}"></th:block>
+</body>
+</html>
