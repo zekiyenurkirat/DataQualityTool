@@ -1,5 +1,8 @@
 # Data Quality & Master Data Management (MDM) Tool
 
+**Geliştirici:** Zekiye Nur Kırat
+**Teknoloji yığını:** Java 21 · Spring Boot 3.3 · PostgreSQL · Thymeleaf · Bootstrap 5
+
 PostgreSQL tablolarındaki veri kalitesi sorunlarını kural tabanlı olarak tespit eden,
 raporlayan ve kullanıcı onayıyla düzelten bir web uygulaması.
 
@@ -29,14 +32,44 @@ record)** altında birleştirir.
 
 ## Ne yapar
 
-### 1. Veri profilleme (Data Profiling)
+Araç iki aşamada çalışır: önce **salt okunur analiz**, sonra **kullanıcı onayına bağlı
+düzeltme**. Analiz aşamasında veriye tek bir yazma işlemi yapılmaz.
+
+---
+
+### A · Analiz — salt okunur
+
+#### 1. Veri profilleme (Data Profiling)
 
 Seçilen tabloyu tek taramada profiller: satır sayısı, kolon doluluk oranı, tekil değer
-sayısı. Kimlik adayı kolonlar için doluluk ve tekillik yüzdesi ayrı gösterilir.
+sayısı. Kimlik adayı kolon için doluluk ve tekillik yüzdesi ayrı gösterilir ve kolonun
+kimlik olarak kullanılmaya uygun olup olmadığı raporda değerlendirilir.
 
-### 2. Kural tabanlı doğrulama
+#### 2. Kimlik üretme zinciri (Identity Resolution)
 
-Altı kural çalışır ve her biri hangi DAMA boyutunu ölçtüğünü bildirmek zorundadır:
+Tabloda kullanılabilir bir birincil anahtar olmayabilir. Araç sorumluluk zinciri deseniyle
+çalışan bir kimlik üreticisi kullanır:
+
+1. Kimlik kolonu seçildiyse ve doluysa onu kullanır
+2. Değilse eşleştirilen alanlardan **SHA-256 özeti** üretir
+
+Üretilen kimlikler raporda işaretlenir ve veritabanında aranamayacakları belirtilir. Kimlik
+hem satır listesinde hem kopya tablosunda **aynı değeri** taşır.
+
+#### 3. Kalıp kelime tespiti — dirsek yöntemi (Stop-word Detection)
+
+Firma adlarının neredeyse tamamında geçen hukuki kalıplar firmaları birbirinden ayırmaz,
+yalnızca benzerlik puanını şişirir. Araç kelime frekans listesindeki **en büyük düşüşü**
+arar ve o noktaya kadarki kelimeleri karşılaştırma dışı bırakır.
+
+Düşüş eşiğin altındaysa **hiçbir kelime silinmez** ve ekranda nedeni sayıyla açıklanır:
+kararı kullanıcı verir. Seçilen kelimeler raporda ayrı bir tabloda, otomatik mi kullanıcı
+seçimi mi olduğu belirtilerek listelenir.
+
+#### 4. Kural tabanlı doğrulama
+
+Yedi kural çalışır; her biri hangi DAMA boyutunu ölçtüğünü `Kural` arayüzü üzerinden
+bildirmek zorundadır:
 
 | Kural | Ne denetler | DAMA boyutu |
 |---|---|---|
@@ -44,46 +77,138 @@ Altı kural çalışır ve her biri hangi DAMA boyutunu ölçtüğünü bildirme
 | `PlaceholderKurali` | `N/A`, `-`, `yok` gibi sahte doluluk | Tamlık |
 | `EmailRule` | E-posta biçimi, hücrede birden fazla adres | Geçerlilik |
 | `TelefonKurali` | Numara yapısı (libphonenumber), çoklu numara | Geçerlilik |
-| `WebSitesiKurali` | URL biçimi, beş ayrı hata sınıfı | Geçerlilik |
+| `WebSitesiKurali` | URL biçimi — beş ayrı hata sınıfı | Geçerlilik |
 | `BoslukKurali` | Baştaki/sondaki ve ardışık boşluklar | Tutarlılık |
 | `KimlikNoKurali` | Kimlik numarası kalıbından sapma | Tutarlılık |
 
-### 3. Kalite skor kartı (DAMA Scorecard)
+Bir alanda yer tutucu bulunduğunda o alanın diğer kuralları **hiç çalıştırılmaz**: olmayan
+bir bilginin biçimini sormak bulgu değil gürültü üretir.
 
-Altı boyut ayrı ayrı puanlanır: **Tamlık · Geçerlilik · Teklik · Tutarlılık · Doğruluk ·
-Güncellik.** Ölçülemeyen boyutlar karttan silinmez, `—` ile durur ve genel puana dahil
+#### 5. Kimlik numarası kalıp analizi (Pattern Analysis)
+
+Kimlik numarası kolonunu iki aşamada çözer: önce baskın şekli keşfeder (ardışık rakam,
+ardışık harf ve ayraçlardan bir maske çıkarır), sonra satırları o şekle karşı denetler.
+Kalıp dağılımı raporda örnek değerlerle birlikte tablo hâlinde gösterilir.
+
+Baskın kalıp değerlerin belirlenen oranın altını kapsıyorsa hiçbir satır işaretlenmez —
+UUID gibi rastgele kimliklerde sapılacak bir kalıp yoktur.
+
+**Hiçbir kimlik numarası değiştirilmez.** Kalıp dışı bir ek (şube kodu, kontrol hanesi)
+silinirse iki ayrı tüzel kişilik tek kayda düşebilir.
+
+#### 6. Kopya ve benzer kayıt tespiti (Entity Resolution)
+
+- **Birebir kopyalar** kimliğe göre gruplanır — `O(n)`, sıfır ek sorgu. Kaç kayıt, kaç
+  fazlalık olduğu grup grup gösterilir.
+- **Benzer kayıtlar** PostgreSQL `pg_trgm` trigram benzerliğiyle bulunur; sorgu çalışmadan
+  önce ilgili ifade üzerinde GIN indeksi kurulur.
+- Firma adı ve adres için **iki ayrı puan** gösterilir, tek skorda birleştirilmez.
+- **Çoklu adres kolonu** desteklenir: adres şehir / mahalle / sokak / kapı no diye ayrılmış
+  tablolarda hepsi seçilip birlikte karşılaştırılabilir.
+- Ölçülemeyen adres puanı sıfır değil tire ile gösterilir; "hiç benzemiyor" ile "bilmiyoruz"
+  ayrı bilgilerdir.
+
+#### 7. Kalite skor kartı (DAMA Scorecard)
+
+Altı boyut ayrı ayrı puanlanır: **Tamlık, Geçerlilik, Teklik, Tutarlılık, Doğruluk,
+Güncellik.** Ölçülemeyen boyutlar karttan silinmez, tire ile durur ve genel puana dahil
 edilmez.
 
-### 4. Eylem haritası (Remediation Routing)
+Puanlamada **bulgu değil hücre** sayılır ve denetlenmemiş hücre paydaya hiç girmez.
+
+#### 8. Eylem haritası (Remediation Routing)
 
 Her bulgu üç kovadan birine düşer:
 
 - **Otomatik düzeltilebilir** — tek adımda giderilir
-- **İnceleme gerekir** — insan kararı ister
+- **İnceleme gerekir** — insan kararı (data steward) ister
 - **Bilerek düzeltilmiyor** — düzeltilebilir ama otomatik düzeltmek veri kaybına yol açar
+  (*non-destructive cleansing*)
 
-### 5. Kopya ve benzer kayıt tespiti (Entity Resolution)
+#### 9. Doğrulama özeti ve yapılmayan kontroller
 
-- **Birebir kopyalar** kimliğe göre gruplanır — `O(n)`, sıfır ek sorgu
-- **Benzer kayıtlar** PostgreSQL `pg_trgm` trigram benzerliğiyle bulunur
-- Firma adı ve adres için **iki ayrı puan** gösterilir, tek skorda birleştirilmez
+Binlerce satırlık bulgu listesi tek bir mesaj türüyle dolabildiği için bulgular alan ve
+mesaj ikilisine göre gruplanıp adede göre sıralanır.
 
-### 6. Veri temizleme (Data Remediation)
+Ayrıca araç **yapamadığı kontrolleri de raporlar**: ülke seçilmediği için telefon
+denetlenmediyse, firma adı eşleştirilmediği için kopya taraması yapılmadıysa ya da bazı
+satırlar için kimlik üretilemediyse bunlar ayrı bir uyarı bloğunda yazar. Boş bir tablonun
+"sorun yok" gibi okunmasını engeller.
 
-Boşluk düzeltme, serbest karakter silme, harf dönüşümü, e-posta / telefon / web adresi
-onarımı. **Hiçbir değişiklik önizleme ve onay olmadan yazılmaz.**
+---
 
-### 7. Ana kayıt üretimi (Golden Record & Survivorship)
+### B · Düzeltme — kullanıcı onayına bağlı
 
-İki kipte çalışır:
+#### 10. Veri temizleme (Data Remediation)
 
-- **Kayıt seviyesinde** — sıralı kural zinciri (doluluk → karakter uzunluğu → kimlik
-  sırası) kaynak kayıtlardan birini ana kayıt seçer
+Kolon başına ayrı kural belirlenir: baştaki ve sondaki boşlukları kırpma, ardışık boşlukları
+teke indirme, serbest metinle karakter silme, harf dönüşümü.
+
+Akış üç ekrana bölünmüştür — **kolon seç, kural belirle, önizle ve onayla.** Kullanıcı eski
+ve yeni değerleri birebir görmeden hiçbir şey yazılmaz. İşlem sonrası ekranda güncellenen,
+atlanan ve eşleşmeyen satır sayıları ayrı ayrı raporlanır.
+
+#### 11. Değer onarım motoru (Repair Engine)
+
+Ortak bir arayüz altında dört onarıcı çalışır:
+
+| Onarıcı | Ne yapar |
+|---|---|
+| `EpostaOnarici` | İç boşluk, tekrarlayan işaretler ve baş/son noktalama temizler. Yalnızca fazlalığı kaldırır, eksik alan adı uydurmaz. Sonuç geçerli değilse değer değiştirilmez. |
+| `WebSitesiOnarici` | Şema ve alan adını küçültür, varsayılan portu ve sondaki tek eğik çizgiyi siler. **Yola dokunmaz** — RFC 3986'ya göre alan adı büyük/küçük harf duyarsız, yol duyarlıdır. Eksik şema tamamlanmaz. |
+| `TelefonOnarici` | libphonenumber ile E164, INTERNATIONAL veya NATIONAL biçimine çevirir. |
+| `BoslukOnarici` | Boşluk düzenler, hiçbir şeyi yorumlamaz; özel onarıcısı olmayan metin kolonlarının varsayılanıdır. |
+
+Sonuç **üç durumludur**: değişti, gerek yoktu, onarılamadı. İki durumlu olsaydı zaten
+geçerli biçimdeki kayıtlar kullanıcıya "atlandı" görünürdü.
+
+#### 12. Ana kayıt üretimi (Golden Record & Survivorship)
+
+Birleştirmeden önce adaylar **birleştir-bul (union-find)** ile kümelenir: A ile B, B ile C
+eşleşiyorsa üçü tek kümedir. İkişerli birleştirme bu üçlüyü iki ayrı ana kayda bölerdi.
+
+İki kip:
+
+- **Kayıt seviyesinde** — sıralı kural zinciri (doluluk, karakter uzunluğu, kimlik sırası)
+  kaynak kayıtlardan birini ana kayıt seçer. Zincir her zaman bir karara ulaşır çünkü sonuç
+  deterministik olmalıdır; ama **zayıf bir kuralla verilen karar gizlenmez** — hangi kuralın
+  karar verdiği ekranda yazar ve kullanıcıya diğer kaydı seçme imkânı sunulur.
 - **Alan seviyesinde (Field-level Survivorship)** — kullanıcı her kolonu ayrı seçer,
-  girdilerin hiçbiri olmayan **yeni bir kayıt sentezlenir**
+  girdilerin hiçbiri olmayan **yeni bir kayıt sentezlenir.** Bir satırdaki telefon ile
+  ötekindeki e-posta birlikte yaşar.
 
-Kaynak tablo hiç değişmez. Kararlar ayrı bir **çapraz referans (XREF)** tablosunda,
-gerekçesi ve zaman damgasıyla saklanır.
+#### 13. Denetim izi ve veri soyağacı (Audit Trail & Lineage)
+
+Hiçbir satır silinmez, kaynak tabloya satır da eklenmez. Kararlar aracın kendi tablolarında
+saklanır:
+
+- `veri_kalitesi_birlestirme` — kim ana kayıt, kim ona bağlı, **hangi kuralın hangi
+  sayılarla** karar verdiği, karar zamanı. Kullanıcı aracın önerisini ezdiyse o da yazılır.
+- `veri_kalitesi_altin_kayit` — sentezlenen ana kaydın **kolon başına bir satırı**, her satır
+  o değerin hangi kaynak kayıttan geldiğini taşır (alan seviyesinde soyağacı).
+
+#### 14. Veri şeffaflığı (Data Provenance)
+
+Birleştirme ekranında değerler ham hâliyle değil onarım motorundan geçmiş hâliyle sunulur.
+Bir değer değiştiyse yanında onarıldığını belirten bir rozet ve altında **ham hâli** görünür.
+Sessizce değiştirilmiş veriye güvenilmez.
+
+---
+
+### C · Genel
+
+#### 15. Hata yönetimi
+
+Yakalanmayan istisnalar, kök nedeni yazan ve geri dönüş yolu sunan bir ekrana dönüşür; tam
+yığın günlüğe yazılmaya devam eder. Oturum zaman aşımına uğradığında kullanıcı hata almaz,
+bağlantı ekranına yönlendirilir.
+
+#### 16. Uluslararası veri desteği
+
+Arapça, Kiril ve Latin alfabeleriyle çalışır. Küçük harfe çevirme `Locale.ROOT` ile yapılır,
+içerik kontrolü `Character.isLetterOrDigit` ile, özet alınırken kodlama UTF-8 olarak açıkça
+verilir. Ülke kodu tablo adından tahmin edilir ama karar kullanıcıya bırakılır; ülke listesi
+`Locale.getISOCountries()` üzerinden üretilir, elle yazılmış bir harita yoktur.
 
 ---
 
