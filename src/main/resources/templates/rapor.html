@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="tr" data-bs-theme="light" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{parcalar/duzen :: kafa('Analiz Raporu')}"></th:block>
+</head>
+<body>
+
+<th:block th:replace="~{parcalar/duzen :: ustcubuk}"></th:block>
+<th:block th:replace="~{parcalar/duzen :: adimlar(5)}"></th:block>
+
+<main class="container-xl tc-sayfa">
+
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
+        <div>
+            <span class="tc-etiket">ADIM 5 / 9 · SONUÇ</span>
+            <h1 class="mt-2 mb-0">Analiz Raporu</h1>
+        </div>
+        <a class="btn btn-primary" th:href="@{/temizleme}">Verileri temizle</a>
+    </div>
+
+    <div class="tc-yigin">
+
+        <!-- Birleştirme geri bildirimi -->
+        <div th:if="${birlestirmeMesaji}" class="alert alert-success" role="alert">
+            <strong>Kayıtlar birleştirildi.</strong>
+            <div th:text="${birlestirmeMesaji}">mesaj</div>
+            <div class="mt-1" style="font-size:.8125rem;" th:if="${birlestirmeSayaci}">
+                Bu oturumda <strong th:text="${birlestirmeSayaci}">0</strong> çift birleştirildi;
+                çözülen çiftler aşağıdaki listeden çıkarıldı.
+            </div>
+        </div>
+        <div th:if="${birlestirmeHatasi}" class="alert alert-danger" role="alert">
+            <strong>Birleştirme yapılamadı.</strong>
+            <div th:text="${birlestirmeHatasi}">hata</div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- Skor kartı                                                   -->
+        <!-- ============================================================ -->
+        <div class="card" th:unless="${sonuc.skorKarti.bosMu}">
+            <div class="card-header">
+                <div>
+                    <span class="tc-etiket">DAMA VERİ KALİTESİ ÇERÇEVESİ</span>
+                    <h2 class="mt-1">Kalite Skor Kartı</h2>
+                </div>
+                <span class="badge tc-sayac">
+                    <span th:text="${sonuc.skorKarti.puanlananBoyutSayisi}">0</span> boyut ölçüldü
+                </span>
+            </div>
+
+            <div class="card-body">
+                <div class="row g-4 align-items-center">
+
+                    <!-- Genel puan: raporun tek satırlık özeti -->
+                    <div class="col-md-3 text-center text-md-start">
+                        <div class="tc-genel-puan"
+                             th:text="'%' + ${#numbers.formatDecimal(sonuc.skorKarti.genelPuan, 1, 1)}">%0,0</div>
+                        <div class="tc-not mt-2">
+                            Ölçülebilen <span th:text="${sonuc.skorKarti.puanlananBoyutSayisi}">0</span>
+                            boyutun ağırlıksız ortalaması.
+                        </div>
+                    </div>
+
+                    <div class="col-md-9">
+                        <div class="tc-kaydir">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                <tr>
+                                    <th style="width:20%;">Boyut</th>
+                                    <th style="width:24%;">Puan</th>
+                                    <th style="width:11%;" class="text-end">Sorunsuz</th>
+                                    <th style="width:11%;" class="text-end">Sorunlu</th>
+                                    <th>Ne ölçüyor</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="boyut : ${sonuc.skorKarti.boyutlar}">
+                                    <td>
+                                        <strong th:text="${boyut.tur.turkce}">Boyut</strong>
+                                        <div class="tc-not" style="font-size:.75rem;"
+                                             th:text="${boyut.tur.ingilizce}">Dimension</div>
+                                    </td>
+
+                                    <!-- Puan hem rozet hem çubuk olarak gösteriliyor: rozet kesin
+                                         sayıyı, çubuk sayıyı okumadan önceki ilk izlenimi verir. -->
+                                    <td>
+                                        <th:block th:if="${boyut.puanlanabilir}">
+                                            <span class="badge"
+                                                  th:classappend="${boyut.puan} >= 90 ? 'tc-rozet-iyi'
+                                                                : (${boyut.puan} >= 70 ? 'tc-rozet-uyari'
+                                                                : 'tc-rozet-tehlike')"
+                                                  th:text="'%' + ${#numbers.formatDecimal(boyut.puan, 1, 1)}">%0,0</span>
+                                            <span class="tc-cubuk ms-2"
+                                                  th:classappend="${boyut.puan} >= 90 ? 'iyi'
+                                                                : (${boyut.puan} >= 70 ? 'uyari' : 'tehlike')">
+                                                <span th:style="'width:' + ${#numbers.formatDecimal(boyut.puan, 1, 0, 'POINT')} + '%'"></span>
+                                            </span>
+                                        </th:block>
+                                        <span class="badge tc-rozet-notr" th:unless="${boyut.puanlanabilir}">ölçülemedi</span>
+                                    </td>
+
+                                    <td class="tc-sayi" th:text="${boyut.puanlanabilir} ? ${boyut.sorunsuz} : '—'">—</td>
+                                    <td class="tc-sayi" th:text="${boyut.puanlanabilir} ? ${boyut.sorunlu} : '—'">—</td>
+                                    <td class="tc-not" th:text="${boyut.tur.aciklama}">açıklama</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tc-not mt-3">
+                    Payda, o boyut adına <strong>gerçekten denetlenen</strong> hücre sayısıdır. Denetlenmeyen
+                    bir hücre sorunsuz sayılmaz — örneğin ülke seçilmediyse telefonlar geçerlilik puanına
+                    hiç girmez. Ölçülemeyen boyutlar puana dahil edilmez.
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- Yapılmayan kontroller                                        -->
+        <!-- ============================================================ -->
+        <div th:if="${!sonuc.yapilmayanKontroller.isEmpty()}" class="tc-kutu tc-kutu-uyari">
+            <div class="tc-kutu-baslik">Yapılmayan kontroller</div>
+            <ul class="mb-0 ps-3">
+                <li th:each="uyari : ${sonuc.yapilmayanKontroller}" th:text="${uyari}">uyarı</li>
+            </ul>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- Kimlik kolonu profili                                        -->
+        <!-- ============================================================ -->
+        <div class="card" th:if="${sonuc.idKolonuProfili != null}">
+            <div class="card-header">
+                <div>
+                    <span class="tc-etiket">KİMLİK KOLONU</span>
+                    <h2 class="mt-1" th:text="${sonuc.idKolonuProfili.kolonAdi}">kolon</h2>
+                </div>
+                <span class="badge tc-rozet-iyi"
+                      th:if="${sonuc.idKolonuProfili.tekil and sonuc.idKolonuProfili.tamamenDolu}">Kimlik olarak uygun</span>
+                <span class="badge tc-rozet-tehlike" th:if="${sonuc.idKolonuProfili.bos}">Tamamen boş</span>
+                <span class="badge tc-rozet-tehlike"
+                      th:if="${!sonuc.idKolonuProfili.bos and !sonuc.idKolonuProfili.tekil}">Tekil değil</span>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-sm-6">
+                        <span class="tc-etiket">DOLULUK</span>
+                        <div class="mt-1">
+                            <strong th:text="${sonuc.idKolonuProfili.doluSatir}">0</strong>
+                            / <span th:text="${sonuc.idKolonuProfili.toplamSatir}">0</span> satır
+                            <span class="badge tc-rozet-notr ms-1">
+                                %<span th:text="${sonuc.idKolonuProfili.dolulukYuzdesi}">0</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="tc-etiket">TEKİLLİK</span>
+                        <div class="mt-1">
+                            <strong th:text="${sonuc.idKolonuProfili.tekilDeger}">0</strong>
+                            farklı değer
+                            <span class="badge tc-rozet-notr ms-1">
+                                %<span th:text="${sonuc.idKolonuProfili.tekillikYuzdesi}">0</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tc-kutu tc-kutu-tehlike mt-3" th:if="${sonuc.idKolonuProfili.bos}">
+                    Bu kolon tamamen boş — kimlik olarak kullanılamaz.
+                </div>
+                <div class="tc-kutu tc-kutu-tehlike mt-3"
+                     th:if="${!sonuc.idKolonuProfili.bos and !sonuc.idKolonuProfili.tekil}">
+                    Bu kolon tekil değil — aynı değer birden fazla satırda geçiyor, kimlik olarak uygun değil.
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- Kimlik numarası kalıbı                                       -->
+        <!-- ============================================================ -->
+        <div class="card" th:if="${sonuc.kimlikNoProfili != null and sonuc.kimlikNoProfili.toplamDeger > 0}">
+            <div class="card-header">
+                <div>
+                    <span class="tc-etiket">KİMLİK NUMARASI KALIBI</span>
+                    <h2 class="mt-1" th:text="${sonuc.kimlikNoProfili.kolonAdi}">kolon</h2>
+                </div>
+                <span class="badge tc-rozet-tehlike"
+                      th:if="${sonuc.kimlikNoProfili.baskinSekilVarMi and sonuc.kimlikNoProfili.uymayanAdet > 0}">
+                    <span th:text="${sonuc.kimlikNoProfili.uymayanAdet}">0</span> değer kalıba uymuyor
+                </span>
+            </div>
+            <div class="card-body">
+
+                <div th:if="${sonuc.kimlikNoProfili.baskinSekilVarMi}">
+                    Baskın kalıp <code th:text="${sonuc.kimlikNoProfili.baskinSekil}">999</code> —
+                    <span th:text="${sonuc.kimlikNoProfili.baskinSekilAdedi}">0</span> /
+                    <span th:text="${sonuc.kimlikNoProfili.toplamDeger}">0</span> değer
+                    <span class="badge tc-rozet-mor ms-1">
+                        %<span th:text="${#numbers.formatDecimal(sonuc.kimlikNoProfili.kapsamaOrani * 100, 1, 1)}">0</span>
+                    </span>
+                </div>
+
+                <div th:unless="${sonuc.kimlikNoProfili.baskinSekilVarMi}" class="tc-not">
+                    Baskın bir kalıp yok — değerler rastgele üretilmiş görünüyor. Bu kolonda kalıp
+                    tutarlılığı denetlenmedi.
+                </div>
+
+                <div class="tc-not mt-2">
+                    Uzunluk: <span th:text="${sonuc.kimlikNoProfili.enKisaUzunluk}">0</span> –
+                    <span th:text="${sonuc.kimlikNoProfili.enUzunUzunluk}">0</span> karakter
+                    <span th:if="${sonuc.kimlikNoProfili.uzunlukDegiskenMi}">
+                        · uzunluk sabit değil; veri bir aşamada sayı tipinden geçip baştaki sıfırları
+                        kaybetmiş olabilir
+                    </span>
+                </div>
+
+                <div class="tc-kaydir mt-3" style="border:1px solid var(--tc-cizgi); border-radius:var(--tc-yuvarlak-kucuk);">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                        <tr>
+                            <th>Kalıp</th>
+                            <th class="text-end">Adet</th>
+                            <th>Örnek</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="satir : ${sonuc.kimlikNoProfili.dagilim}">
+                            <td><code th:text="${satir.sekil}">999</code></td>
+                            <td class="tc-sayi" th:text="${satir.adet}">0</td>
+                            <td th:text="${satir.ornekDeger}">örnek</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="tc-kutu tc-kutu-bilgi mt-3">
+                    Kimlik numaraları <strong>değiştirilmedi.</strong> Kalıp dışı bir ek (şube kodu,
+                    kontrol hanesi) silinirse iki ayrı kayıt tek kayda düşebilir; bu karar incelemeye ait.
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- Hariç tutulan kelimeler                                      -->
+        <!-- ============================================================ -->
+        <div class="card" th:if="${!sonuc.haricTutulanKelimeler.isEmpty()}">
+            <div class="card-header">
+                <div>
+                    <span class="tc-etiket">KOPYA TARAMASI</span>
+                    <h2 class="mt-1">Karşılaştırma dışı bırakılan kelimeler</h2>
+                </div>
+                <span class="badge tc-sayac">
+                    <span th:text="${#lists.size(sonuc.haricTutulanKelimeler)}">0</span> kelime
+                </span>
+            </div>
+            <div class="card-body pb-0">
+                <p class="tc-not">
+                    Bu kelimeler kopya firma karşılaştırmasında yok sayıldı. Firma adlarının çoğunda geçtikleri
+                    için firmaları birbirinden ayırmıyor, yalnızca benzerlik puanını yükseltiyorlar.
+                </p>
+            </div>
+            <div class="card-body tc-tablo-govde">
+                <div class="tc-kaydir">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                        <tr>
+                            <th>Kelime</th>
+                            <th class="text-end">Geçtiği kayıt</th>
+                            <th class="text-end">Oran</th>
+                            <th>Nasıl seçildi</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="kelime : ${sonuc.haricTutulanKelimeler}">
+                            <td><strong th:text="${kelime.kelime}">kelime</strong></td>
+                            <td class="tc-sayi" th:text="${kelime.tekrarSayisi}">0</td>
+                            <td class="tc-sayi" th:text="'%' + ${#numbers.formatDecimal(kelime.yuzde, 1, 1)}">%0</td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${kelime.otomatikSecildi} ? 'tc-rozet-mor' : 'tc-rozet-notr'"
+                                      th:text="${kelime.otomatikSecildi} ? 'Kalıp kelime tespiti' : 'Kullanıcı seçimi'">seçim</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- Eylem haritası                                               -->
+        <!-- ============================================================ -->
+        <div class="card" th:if="${!sonuc.ozet.isEmpty()}">
+            <div class="card-header">
+                <div>
+                    <span class="tc-etiket">REMEDIATION ROUTING</span>
+                    <h2 class="mt-1">Doğrulama Özeti ve Eylem Haritası</h2>
+                </div>
+            </div>
+            <div class="card-body pb-0">
+                <p class="tc-not">
+                    Her bulgu üç kovadan birine düşer: bir kısmı tek adımda otomatik düzeltilir, bir kısmı
+                    insan kararı ister, bir kısmı ise <strong>düzeltilebilir olduğu hâlde bilerek
+                    düzeltilmez</strong> — otomatik düzeltmek veri kaybına yol açacağı için.
+                </p>
+            </div>
+            <div class="card-body tc-tablo-govde">
+                <div class="tc-kaydir">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                        <tr>
+                            <th style="width:11%;">Alan</th>
+                            <th style="width:26%;">Bulgu</th>
+                            <th style="width:7%;" class="text-end">Adet</th>
+                            <th style="width:16%;">Ne yapılabilir</th>
+                            <th>Nasıl</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="satir : ${sonuc.ozet}">
+                            <td th:text="${satir.alanAdi}">alan</td>
+                            <td th:text="${satir.mesaj}">bulgu</td>
+                            <td class="tc-sayi" th:text="${satir.adet}">0</td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${satir.eylem.name() == 'OTOMATIK'} ? 'tc-rozet-iyi'
+                                                    : (${satir.eylem.name() == 'INCELEME'} ? 'tc-rozet-uyari'
+                                                    : 'tc-rozet-notr')"
+                                      th:text="${satir.eylem.baslik}">eylem</span>
+                            </td>
+                            <td class="tc-not" th:text="${satir.eylemNotu}">not</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- Doğrulama sonuçları                                          -->
+        <!-- ============================================================ -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <span class="tc-etiket">SATIR SATIR</span>
+                    <h2 class="mt-1">Doğrulama Sonuçları</h2>
+                </div>
+                <span class="badge tc-sayac">
+                    <span th:text="${#lists.size(sonuc.dogrulamaSonuclari)}">0</span> bulgu
+                </span>
+            </div>
+            <div class="card-body tc-tablo-govde">
+                <!-- Liste binlerce satır olabiliyor; sayfayı uzatmak yerine kendi
+                     içinde kayan, başlığı yapışkan bir kaba alındı. -->
+                <div class="tc-kaydir tc-yapiskan-baslik" style="max-height:520px;">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                        <tr>
+                            <th style="width:6%;" class="text-end">Sıra</th>
+                            <th style="width:16%;">Id</th>
+                            <th style="width:14%;">Alan</th>
+                            <th>Mesaj</th>
+                            <th style="width:24%;">Değer</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="hata, sira : ${sonuc.dogrulamaSonuclari}">
+                            <td class="tc-sayi" th:text="${sira.count}">0</td>
+                            <td th:text="${hata.satirNo}">id</td>
+                            <td th:text="${hata.alanAdi}">alan</td>
+                            <td th:text="${hata.mesaj}">mesaj</td>
+                            <td style="white-space:pre-wrap;" th:text="${hata.deger}">değer</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- A — Birebir aynı kayıtlar                                    -->
+        <!-- ============================================================ -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <span class="tc-etiket">A · EXACT DUPLICATE</span>
+                    <h2 class="mt-1">Birebir Aynı Kayıtlar</h2>
+                </div>
+                <span class="badge tc-rozet-iyi" th:if="${sonuc.kopyaGruplari.isEmpty()}">Temiz</span>
+                <span class="badge tc-rozet-tehlike" th:unless="${sonuc.kopyaGruplari.isEmpty()}">
+                    <span th:text="${sonuc.toplamFazlalik}">0</span> satır fazlalık
+                </span>
+            </div>
+
+            <div class="card-body" th:if="${sonuc.kopyaGruplari.isEmpty()}">
+                <div class="tc-kutu tc-kutu-iyi mb-0">Birebir aynı kayıt bulunamadı.</div>
+            </div>
+
+            <th:block th:unless="${sonuc.kopyaGruplari.isEmpty()}">
+                <div class="card-body pb-0">
+                    <p class="tc-not">
+                        <strong th:text="${sonuc.kopyaGruplari.size()}">0</strong> kayıt birden fazla kez girilmiş.
+                        Toplam <strong th:text="${sonuc.toplamFazlalik}">0</strong> satır fazlalık —
+                        her gruptan bir tanesi kalıp gerisi silinebilir.
+                    </p>
+                </div>
+                <div class="card-body tc-tablo-govde">
+                    <div class="tc-kaydir tc-yapiskan-baslik" style="max-height:520px;">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                            <tr>
+                                <th style="width:6%;" class="text-end">Sıra</th>
+                                <th>Değer</th>
+                                <th style="width:11%;" class="text-end">Kayıt sayısı</th>
+                                <th style="width:9%;" class="text-end">Fazlalık</th>
+                                <th style="width:24%;">Kimlik</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="grup, sira : ${sonuc.kopyaGruplari}">
+                                <td class="tc-sayi" th:text="${sira.count}">0</td>
+                                <td th:text="${grup.ornekDeger}">değer</td>
+                                <td class="tc-sayi" th:text="${grup.kayitSayisi}">0</td>
+                                <td class="tc-sayi"><span class="badge tc-rozet-tehlike" th:text="${grup.fazlalik}">0</span></td>
+                                <td class="tc-not" th:text="${grup.kimlik}">kimlik</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </th:block>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- B — Benzer / şüpheli kayıtlar                                -->
+        <!-- ============================================================ -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <span class="tc-etiket">B · FUZZY MATCH</span>
+                    <h2 class="mt-1">Benzer / Şüpheli Kayıtlar</h2>
+                </div>
+                <span class="badge tc-sayac">
+                    <span th:text="${#lists.size(sonuc.benzerFirmaCiftleri)}">0</span> çift
+                </span>
+            </div>
+
+            <div class="card-body pb-0">
+                <p class="tc-not">
+                    Birebir aynı olmayan ama birbirine benzeyen kayıtlar. Araç bunları
+                    <strong>birleştirmiyor</strong>; aynı firma olup olmadıkları veriden kesin olarak
+                    anlaşılamadığı için karar incelemeye bırakılıyor.
+                </p>
+                <p class="tc-not" th:if="${sonuc.hamBenzerCiftSayisi > sonuc.benzerFirmaCiftleri.size()}">
+                    Sorgudan <strong th:text="${sonuc.hamBenzerCiftSayisi}">0</strong> eşleşme döndü;
+                    birebir kopyalar ve tekrar eden çiftler elendikten sonra
+                    <strong th:text="${sonuc.benzerFirmaCiftleri.size()}">0</strong> ayrı çift kaldı.
+                </p>
+                <div class="tc-kutu tc-kutu-iyi" th:if="${sonuc.benzerFirmaCiftleri.isEmpty()}">
+                    Şüpheli eşleşme bulunamadı.
+                </div>
+
+                <div class="tc-kutu tc-kutu-bilgi" th:unless="${sonuc.benzerFirmaCiftleri.isEmpty()}">
+                    <div class="tc-kutu-baslik">"Ana kayıt" sütunu ne yapıyor</div>
+                    <p class="mb-2">
+                        Araç her çift için sıralı bir <strong>kural zinciri</strong> çalıştırıp hangi
+                        kaydın ana kayıt — <em>golden record</em> — olacağını önerir:
+                        <strong>1) Doluluk</strong> — daha çok <em>anlamlı</em> alanı dolu olan kazanır
+                        (<code>-</code> ve <code>N/A</code> gibi yer tutucular dolu sayılmaz) ·
+                        <strong>2) Karakter uzunluğu</strong> — doluluk eşitse ·
+                        <strong>3) Kimlik sırası</strong> — ikisi de eşitse.
+                    </p>
+                    <p class="mb-2">
+                        Zincir sonuna kadar gider, çünkü karar <strong>deterministik</strong> olmalı:
+                        aynı veri her çalıştırmada aynı ana kaydı vermeli, yoksa yeni bir çekim geldiğinde
+                        eski kararlarla çelişir. Ama zayıf bir kuralla verilen karar gizlenmez —
+                        rozet sarı olur ve diğer kaydı seçme imkânı da sunulur. Yalnızca
+                        <strong>Doluluk</strong> güçlü kabul edilir.
+                    </p>
+                    <p class="mb-0">
+                        <strong>Birleştirme hiçbir satırı silmez.</strong> Kaybeden kayıt kaynak tabloda
+                        olduğu gibi kalır; ayrı bir izleme tablosunda pasife çekilip kazanan kaydın
+                        kimliğine bağlanır (soft delete + denetim izi). Kaynak tablonun yapısına
+                        dokunulmaz.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card-body tc-tablo-govde" th:unless="${sonuc.benzerFirmaCiftleri.isEmpty()}">
+                <div class="tc-kaydir tc-yapiskan-baslik" style="max-height:560px;">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                        <tr>
+                            <th style="width:5%;" class="text-end">Sıra</th>
+                            <th style="width:11%;">ID</th>
+                            <th>Firma 1</th>
+                            <th style="width:11%;">ID</th>
+                            <th>Firma 2</th>
+                            <th style="width:9%;" class="text-end">Ad puanı</th>
+                            <th style="width:9%;" class="text-end">Adres puanı</th>
+                            <th style="width:16%;">Ana kayıt</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="cift, sira : ${sonuc.benzerFirmaCiftleri}">
+                            <td class="tc-sayi" th:text="${sira.count}">0</td>
+                            <td class="tc-not" th:text="${cift.id_1}">id</td>
+                            <td>
+                                <span th:text="${cift.firma1}">firma</span>
+                                <div class="tc-not" style="font-size:.78rem;"
+                                     th:if="${cift.adres1 != null}" th:text="${cift.adres1}">adres</div>
+                            </td>
+                            <td class="tc-not" th:text="${cift.id_2}">id</td>
+                            <td>
+                                <span th:text="${cift.firma2}">firma</span>
+                                <div class="tc-not" style="font-size:.78rem;"
+                                     th:if="${cift.adres2 != null}" th:text="${cift.adres2}">adres</div>
+                            </td>
+                            <td class="tc-sayi" th:text="${#numbers.formatDecimal(cift.benzerlikOrani, 1, 3)}">0,000</td>
+                            <td class="tc-sayi">
+                                <!-- "—" ile 0,000 aynı şey değil: biri ölçülemedi, diğeri ölçüldü
+                                     ve hiç benzemiyor. Renk de bu ayrımı taşıyor. -->
+                                <span th:if="${cift.adresBenzerligiOlculdu}"
+                                      th:classappend="${cift.adresBenzerligi} >= 0.7 ? 'badge tc-rozet-tehlike' : ''"
+                                      th:text="${#numbers.formatDecimal(cift.adresBenzerligi, 1, 3)}">0,000</span>
+                                <span th:unless="${cift.adresBenzerligiOlculdu}" class="tc-bos">—</span>
+                            </td>
+
+                            <!-- Ana kayıt (golden record) kararı ve birleştirme.
+                                 Araç kararı hesaplayıp GÖSTERİYOR; hiçbir şey
+                                 kullanıcı butona basmadan yazılmıyor. -->
+                            <td th:with="karar=${cift.altinKayitKarari}">
+                                <th:block th:if="${cift.altinKayitKarariVarMi}">
+
+                                    <!-- Hangi kayıt kazandı ve HANGİ KURALLA. Zayıf bir kuralla
+                                         karar verildiyse bu gizlenmiyor; rozet sarı oluyor ve
+                                         kullanıcıya diğer kaydı seçme imkânı da veriliyor. -->
+                                    <div style="font-size:.78rem;">
+                                        <strong th:text="${karar.kazananKimlik == cift.id_1}
+                                                         ? '1. kayıt kalır' : '2. kayıt kalır'">1. kayıt kalır</strong>
+                                        <span class="badge ms-1"
+                                              th:classappend="${karar.guvenilirKarar} ? 'tc-rozet-iyi' : 'tc-rozet-uyari'"
+                                              th:text="${karar.kural.etiket}">Doluluk</span>
+                                        <span class="d-block tc-not" style="font-size:.72rem;"
+                                              th:text="${karar.birinciDoluluk} + ' / ' + ${karar.ikinciDoluluk}
+                                                     + ' dolu alan · ' + ${karar.birinciUzunluk} + ' / '
+                                                     + ${karar.ikinciUzunluk} + ' karakter'">0 / 0</span>
+                                    </div>
+
+                                    <!-- Alan seviyesinde birleştirme: kümedeki bütün kayıtları
+                                         alan alan karşılaştıran ekrana götürür. -->
+                                    <a class="btn btn-sm btn-outline-secondary mt-1 d-block"
+                                       th:href="@{/birlestir/gelismis(kimlik=${cift.id_1})}">Gelişmiş birleştirme</a>
+
+                                    <!-- Güçlü karar: tek buton -->
+                                    <form th:action="@{/birlestir}" method="post" class="mt-1"
+                                          th:if="${karar.guvenilirKarar}">
+                                        <input type="hidden" name="altinKayit" th:value="${karar.kazananKimlik}"/>
+                                        <input type="hidden" name="pasifKayit" th:value="${karar.kaybedenKimlik}"/>
+                                        <button class="btn btn-sm btn-primary" type="submit">Birleştir</button>
+                                    </form>
+
+                                    <!-- Zayıf karar: araç yine de bir kazanan seçti (sonuç her
+                                         çalıştırmada aynı olsun diye) ama kullanıcı diğerini
+                                         seçebilmeli. Önerilen taraf dolu butonla işaretli. -->
+                                    <div th:unless="${karar.guvenilirKarar}" class="d-flex gap-1 mt-1 flex-wrap">
+                                        <form th:action="@{/birlestir}" method="post">
+                                            <input type="hidden" name="altinKayit" th:value="${cift.id_1}"/>
+                                            <input type="hidden" name="pasifKayit" th:value="${cift.id_2}"/>
+                                            <button type="submit" class="btn btn-sm"
+                                                    th:classappend="${karar.kazananKimlik == cift.id_1}
+                                                                    ? 'btn-primary' : 'btn-outline-secondary'">1. kalsın</button>
+                                        </form>
+                                        <form th:action="@{/birlestir}" method="post">
+                                            <input type="hidden" name="altinKayit" th:value="${cift.id_2}"/>
+                                            <input type="hidden" name="pasifKayit" th:value="${cift.id_1}"/>
+                                            <button type="submit" class="btn btn-sm"
+                                                    th:classappend="${karar.kazananKimlik == cift.id_2}
+                                                                    ? 'btn-primary' : 'btn-outline-secondary'">2. kalsın</button>
+                                        </form>
+                                    </div>
+                                </th:block>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- İki puan birlikte nasıl okunur                               -->
+        <!-- ============================================================ -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <span class="tc-etiket">OKUMA KILAVUZU</span>
+                    <h2 class="mt-1">İki puan nasıl birlikte okunur</h2>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <div class="tc-kaydir" style="border:1px solid var(--tc-cizgi); border-radius:var(--tc-yuvarlak-kucuk);">
+                            <table class="table align-middle mb-0">
+                                <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Adres puanı yüksek</th>
+                                    <th>Adres puanı düşük</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td><strong>Ad puanı yüksek</strong></td>
+                                    <td><span class="badge tc-rozet-tehlike">Güçlü aday</span>
+                                        <div class="tc-not">Aynı firma olma ihtimali yüksek</div></td>
+                                    <td><span class="badge tc-rozet-notr">Aynı ad, farklı yer</span>
+                                        <div class="tc-not">Muhtemelen ayrı firmalar</div></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Ad puanı orta</strong></td>
+                                    <td><span class="badge tc-rozet-uyari">Şube olabilir</span>
+                                        <div class="tc-not">Aynı yerde benzer adlar</div></td>
+                                    <td><span class="badge tc-rozet-notr">Zayıf</span>
+                                        <div class="tc-not">Muhtemelen tesadüfi benzerlik</div></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6 tc-not">
+                        <p>
+                            Liste <strong>önce ad puanına, eşitlik hâlinde adres puanına göre</strong> sıralı.
+                            Yani sol üst kutudaki güçlü adaylar en başta; aşağı indikçe kanıt zayıflıyor.
+                            İncelemeye baştan başlamak yeterli.
+                        </p>
+                        <p>
+                            <strong>Neden tek puana indirilmedi:</strong> birleştirmek için alanlara ağırlık vermek
+                            gerekir, ağırlığı da etiketlenmiş örneklerden ölçmeden atamak savunulamaz bir sayı üretir.
+                            Ayrı dururken hangi kanıtın güçlü olduğu görünüyor.
+                        </p>
+                        <p>
+                            <strong>Adres puanı “—” ise</strong> iki durumdan biri var: adres kolonu hiç
+                            eşleştirilmemiş, ya da <strong>çiftin en az birinde adres boş</strong>. İkisinde de
+                            sıfır yazmak “hiç benzemiyor” demek olurdu; oysa doğru bilgi <strong>“bilmiyoruz”</strong>.
+                            <strong>0,000</strong> ise gerçekten ölçüldü ve adresler birbirine hiç benzemiyor demektir.
+                        </p>
+                        <p class="mb-0">
+                            <strong>Dikkat:</strong> adres puanı yalnızca <em>eşleştirdiğiniz kolonları</em>
+                            karşılaştırır. Yalnızca şehir kolonunu eşleştirdiyseniz 1,000 puan “aynı adres” değil
+                            “aynı şehir” demektir.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tc-islem-cubugu">
+            <a class="btn btn-primary" th:href="@{/temizleme}">Verileri temizle</a>
+            <a class="btn btn-outline-secondary" th:href="@{/tablolar}">Başka tablo seç</a>
+        </div>
+
+    </div>
+</main>
+
+<th:block th:replace="~{parcalar/duzen :: altbilgi}"></th:block>
+</body>
+</html>

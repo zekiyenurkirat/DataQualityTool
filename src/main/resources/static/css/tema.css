@@ -1,0 +1,587 @@
+/*
+ * Kurumsal tema
+ * ---------------------------------------------------------------------------
+ * Butun renkler, bosluklar ve yuvarlaklik degerleri burada CSS degiskeni olarak
+ * tanimlanir. Bilesenler bu degiskenler uzerinden bicimlendirilir; hicbir
+ * sayfada renk elle verilmez, tema tek dosyadan degistirilebilir.
+ *
+ * Dosya Bootstrap'TEN SONRA yuklenmelidir. Asagidaki --bs-* tanimlari
+ * Bootstrap'in varsayilan renklerini ve kenarlik yaricaplarini ezer; sira
+ * bozulursa ezme calismaz.
+ */
+
+:root {
+    /* Ana renk ve tonlari */
+    --tc-indigo:        #4F46E5;
+    --tc-indigo-koyu:   #4338CA;
+    --tc-mor:           #7C3AED;
+    --tc-indigo-acik:   #F7F5FF;
+    --tc-indigo-cizgi:  #DDD9FA;
+
+    /* Yuzeyler */
+    --tc-zemin:         #FAFAF8;
+    --tc-kart:          #FFFFFF;
+    --tc-cizgi:         #E6E4DE;
+    --tc-cizgi-acik:    #F0EEE9;
+
+    /* Yazi tonlari (koyudan aciga) */
+    --tc-baslik:        #14161B;
+    --tc-metin:         #2B2E36;
+    --tc-ikincil:       #4A4D56;
+    --tc-soluk:         #6B6E78;
+    --tc-silik:         #9CA0AB;
+
+    /* Anlam renkleri */
+    --tc-iyi:           #16A34A;
+    --tc-iyi-zemin:     #F0FDF4;
+    --tc-uyari:         #B45309;
+    --tc-uyari-zemin:   #FFFBEB;
+    --tc-uyari-cizgi:   #FDE68A;
+    --tc-tehlike:       #DC2626;
+    --tc-tehlike-zemin: #FEF2F2;
+    --tc-tehlike-cizgi: #FECACA;
+
+    /* Golgeler: kartlarda notr, birincil butonda ana renkle tonlanmis */
+    --tc-golge:      0 1px 2px rgba(20, 22, 27, .04), 0 4px 16px rgba(20, 22, 27, .05);
+    --tc-golge-buyuk:0 2px 4px rgba(20, 22, 27, .05), 0 12px 32px rgba(20, 22, 27, .07);
+    --tc-golge-mor:  0 2px 4px rgba(79, 70, 229, .18), 0 8px 24px rgba(79, 70, 229, .22);
+
+    --tc-yuvarlak:      12px;
+    --tc-yuvarlak-kucuk: 6px;
+
+    /* Bootstrap'in kendi degiskenleri tema paletine baglanir */
+    --bs-primary:       #4F46E5;
+    --bs-primary-rgb:   79, 70, 229;
+    --bs-body-bg:       #FAFAF8;
+    --bs-body-color:    #2B2E36;
+    /* Bootstrap'in varsayilan ikincil yazi rengi mavimsi bir gri ve bu
+       paletle uyumsuz; tema degiskenine baglandi. */
+    --bs-secondary-color: #4A4D56;
+    --bs-border-color:  #E6E4DE;
+    --bs-link-color:    #4F46E5;
+    --bs-link-hover-color: #4338CA;
+    --bs-border-radius: 12px;
+    --bs-font-sans-serif: ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+                          Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* --------------------------------------------------------------------------
+   Tipografi
+   -------------------------------------------------------------------------- */
+
+body {
+    background: var(--tc-zemin);
+    color: var(--tc-metin);
+    font-family: var(--bs-font-sans-serif);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+    color: var(--tc-baslik);
+    font-weight: 600;
+    letter-spacing: -.02em;
+    text-wrap: balance;
+}
+
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1.05rem; }
+
+/* Kart basliklarinin ustundeki kucuk buyuk harfli etiket:
+   11.5px / 600 agirlik / genis harf araligi. */
+.tc-etiket {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--tc-soluk);
+}
+
+/* Sayilarin sutun hâlinde hizalanmasi icin. Rapordaki puan ve adet
+   kolonlarinda gozle gorulur fark yaratir. */
+.tc-sayi,
+table td.tc-sayi,
+.table .tc-sayi {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+code {
+    background: var(--tc-cizgi-acik);
+    color: var(--tc-baslik);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: .875em;
+}
+
+.tc-not {
+    color: var(--tc-soluk);
+    font-size: .9rem;
+    max-width: 76ch;
+}
+
+/* --------------------------------------------------------------------------
+   Ust cubuk
+   -------------------------------------------------------------------------- */
+
+.tc-ustcubuk {
+    background: var(--tc-kart);
+    border-bottom: 1px solid var(--tc-cizgi);
+    padding: .75rem 0;
+}
+
+.tc-marka {
+    display: flex;
+    align-items: center;
+    gap: .625rem;
+    color: var(--tc-baslik);
+    font-weight: 600;
+    letter-spacing: -.02em;
+    text-decoration: none;
+}
+
+.tc-marka:hover { color: var(--tc-baslik); }
+
+.tc-marka-isaret {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: var(--tc-indigo);
+    box-shadow: var(--tc-golge-mor);
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -.03em;
+    flex: none;
+}
+
+/* Ust cubuktaki baglanti / tablo rozetleri */
+.tc-durum {
+    display: inline-flex;
+    align-items: center;
+    gap: .375rem;
+    font-size: .8125rem;
+    color: var(--tc-ikincil);
+    background: var(--tc-zemin);
+    border: 1px solid var(--tc-cizgi);
+    border-radius: 999px;
+    padding: .25rem .75rem;
+}
+
+.tc-durum-nokta {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--tc-iyi);
+    flex: none;
+}
+
+/* --------------------------------------------------------------------------
+   Adim serisi
+   -------------------------------------------------------------------------- */
+
+.tc-adimlar {
+    display: flex;
+    align-items: center;
+    gap: .375rem;
+    flex-wrap: wrap;
+    padding: .625rem 0;
+    border-bottom: 1px solid var(--tc-cizgi);
+    background: var(--tc-kart);
+}
+
+.tc-adim {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .8125rem;
+    color: var(--tc-silik);
+    padding: .25rem .625rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.tc-adim-no {
+    width: 19px;
+    height: 19px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--tc-cizgi-acik);
+    color: var(--tc-silik);
+    flex: none;
+}
+
+.tc-adim.gecildi { color: var(--tc-ikincil); }
+.tc-adim.gecildi .tc-adim-no {
+    background: var(--tc-indigo-acik);
+    color: var(--tc-indigo);
+}
+
+.tc-adim.aktif {
+    color: var(--tc-indigo);
+    background: var(--tc-indigo-acik);
+    font-weight: 600;
+}
+.tc-adim.aktif .tc-adim-no {
+    background: var(--tc-indigo);
+    color: #fff;
+}
+
+.tc-adim-ayrac {
+    color: var(--tc-cizgi);
+    font-size: .75rem;
+    user-select: none;
+}
+
+/* --------------------------------------------------------------------------
+   Kartlar
+   -------------------------------------------------------------------------- */
+
+.card {
+    background: var(--tc-kart);
+    border: 1px solid var(--tc-cizgi);
+    border-radius: var(--tc-yuvarlak);
+    box-shadow: var(--tc-golge);
+}
+
+.card-header {
+    background: transparent;
+    border-bottom: 1px solid var(--tc-cizgi);
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.card-header h2,
+.card-header h3 { margin: 0; }
+
+.card-body { padding: 1.25rem; }
+
+/* Tablosu kenara dayanan kart: govde dolgusu yok, tablo kartin
+   kenarlarina kadar uzanir. */
+.card-body.tc-tablo-govde { padding: 0; }
+
+/* --------------------------------------------------------------------------
+   Bilgi / uyari kutulari
+   -------------------------------------------------------------------------- */
+
+.tc-kutu {
+    border: 1px solid var(--tc-cizgi);
+    border-left: 3px solid var(--tc-silik);
+    background: var(--tc-kart);
+    border-radius: var(--tc-yuvarlak-kucuk);
+    padding: .875rem 1rem;
+}
+
+.tc-kutu-baslik {
+    font-weight: 600;
+    color: var(--tc-baslik);
+    margin-bottom: .25rem;
+}
+
+.tc-kutu-bilgi   { border-left-color: var(--tc-indigo);   background: var(--tc-indigo-acik); }
+.tc-kutu-uyari   { border-left-color: var(--tc-uyari);    background: var(--tc-uyari-zemin); }
+.tc-kutu-tehlike { border-left-color: var(--tc-tehlike);  background: var(--tc-tehlike-zemin); }
+.tc-kutu-iyi     { border-left-color: var(--tc-iyi);      background: var(--tc-iyi-zemin); }
+
+/* --------------------------------------------------------------------------
+   Rozetler
+   -------------------------------------------------------------------------- */
+
+.badge {
+    font-weight: 600;
+    font-size: .75rem;
+    letter-spacing: .01em;
+    padding: .3rem .6rem;
+    border-radius: 999px;
+}
+
+.tc-rozet-iyi      { background: var(--tc-iyi-zemin);      color: var(--tc-iyi);      border: 1px solid #BBF7D0; }
+.tc-rozet-uyari    { background: var(--tc-uyari-zemin);    color: var(--tc-uyari);    border: 1px solid var(--tc-uyari-cizgi); }
+.tc-rozet-tehlike  { background: var(--tc-tehlike-zemin);  color: var(--tc-tehlike);  border: 1px solid var(--tc-tehlike-cizgi); }
+.tc-rozet-notr     { background: var(--tc-zemin);          color: var(--tc-soluk);    border: 1px solid var(--tc-cizgi); }
+.tc-rozet-mor      { background: var(--tc-indigo-acik);    color: var(--tc-indigo);   border: 1px solid var(--tc-indigo-cizgi); }
+
+/* Sayac rozeti: kart basliginda kac satir oldugunu gosterir */
+.tc-sayac {
+    background: var(--tc-zemin);
+    border: 1px solid var(--tc-cizgi);
+    color: var(--tc-ikincil);
+    font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   Tablolar
+   -------------------------------------------------------------------------- */
+
+.table {
+    margin: 0;
+    --bs-table-bg: transparent;
+    --bs-table-hover-bg: var(--tc-indigo-acik);
+    font-size: .875rem;
+}
+
+.table > thead > tr > th {
+    background: var(--tc-zemin);
+    border-bottom: 1px solid var(--tc-cizgi);
+    color: var(--tc-soluk);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .625rem .875rem;
+    white-space: nowrap;
+}
+
+.table > tbody > tr > td {
+    border-bottom: 1px solid var(--tc-cizgi-acik);
+    padding: .625rem .875rem;
+    vertical-align: top;
+}
+
+.table > tbody > tr:last-child > td { border-bottom: 0; }
+
+/* Genis tablolar sayfayi degil kendi kabini kaydirir */
+.tc-kaydir {
+    overflow-x: auto;
+    border-radius: 0 0 var(--tc-yuvarlak) var(--tc-yuvarlak);
+}
+
+/* Cok satirli hucreler: uzun listelerde basligi ekranda tutar */
+.tc-yapiskan-baslik thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+/*
+ * Eski/yeni deger vurgusu.
+ *
+ * Secici bilerek ".table td.tc-eski" -- yalnizca ".tc-eski" yazmak yetmiyordu.
+ * Bootstrap hucre zeminini ".table > :not(caption) > * > *" ile veriyor ve o
+ * secicinin ozgullugu (0,1,1) benimkinden (0,1,0) yuksek; pembe/yesil zemin
+ * sessizce eziliyor, tablo bembeyaz kaliyordu. Ekran goruntusunde fark
+ * edildi, hata mesaji vermiyor.
+ */
+.table td.tc-eski { background-color: var(--tc-tehlike-zemin); white-space: pre-wrap; }
+.table td.tc-yeni { background-color: var(--tc-iyi-zemin);     white-space: pre-wrap; }
+.tc-eski { background-color: var(--tc-tehlike-zemin); white-space: pre-wrap; }
+.tc-yeni { background-color: var(--tc-iyi-zemin);     white-space: pre-wrap; }
+.tc-bos  { color: var(--tc-silik); text-align: center; }
+
+/* --------------------------------------------------------------------------
+   Skor kartı
+   -------------------------------------------------------------------------- */
+
+.tc-genel-puan {
+    font-size: 2.75rem;
+    font-weight: 600;
+    letter-spacing: -.04em;
+    line-height: 1;
+    color: var(--tc-baslik);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Boyut puanlarinin yaninda duran ince cubuk. Sayiyi okumadan once
+   dolulugu goruluyor. */
+.tc-cubuk {
+    width: 90px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--tc-cizgi-acik);
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.tc-cubuk > span {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--tc-indigo);
+}
+
+.tc-cubuk.iyi > span      { background: var(--tc-iyi); }
+.tc-cubuk.uyari > span    { background: var(--tc-uyari); }
+.tc-cubuk.tehlike > span  { background: var(--tc-tehlike); }
+
+/* --------------------------------------------------------------------------
+   Formlar
+   -------------------------------------------------------------------------- */
+
+.form-label {
+    font-size: .8125rem;
+    font-weight: 600;
+    color: var(--tc-ikincil);
+    margin-bottom: .3rem;
+}
+
+.form-control,
+.form-select {
+    border: 1px solid var(--tc-cizgi);
+    border-radius: var(--tc-yuvarlak-kucuk);
+    padding: .5rem .75rem;
+    font-size: .9375rem;
+    color: var(--tc-metin);
+    background-color: var(--tc-kart);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--tc-indigo);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, .15);
+}
+
+.form-text {
+    color: var(--tc-soluk);
+    font-size: .8125rem;
+}
+
+.form-check-input:checked {
+    background-color: var(--tc-indigo);
+    border-color: var(--tc-indigo);
+}
+
+.form-check-input:focus {
+    border-color: var(--tc-indigo);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, .15);
+}
+
+.form-check-label { font-size: .9375rem; }
+
+/* Secilebilir kutucuk satiri: tiklama alani tum satir olsun diye */
+.tc-secim {
+    display: block;
+    border: 1px solid var(--tc-cizgi);
+    border-radius: var(--tc-yuvarlak-kucuk);
+    padding: .5rem .75rem;
+    cursor: pointer;
+    transition: border-color .12s, background-color .12s;
+}
+
+.tc-secim:hover {
+    border-color: var(--tc-indigo-cizgi);
+    background: var(--tc-indigo-acik);
+}
+
+/* --------------------------------------------------------------------------
+   Butonlar
+   -------------------------------------------------------------------------- */
+
+.btn {
+    border-radius: var(--tc-yuvarlak-kucuk);
+    font-weight: 500;
+    font-size: .9375rem;
+    padding: .5rem 1.125rem;
+}
+
+/*
+ * Birincil buton duz renk degil, ana renkten mora giden bir gecis kullanir.
+ * background-color ayrica veriliyor: gecis yuklenemezse ya da yazdirmada
+ * dusulurse buton yine dolu kalir, seffaflasmaz.
+ */
+.btn-primary {
+    background-color: var(--tc-indigo);
+    background-image: linear-gradient(to right,
+                      var(--tc-indigo) 0%, #5A51E9 50%, var(--tc-mor) 100%);
+    border-color: var(--tc-indigo);
+    box-shadow: var(--tc-golge-mor);
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background-color: var(--tc-indigo-koyu);
+    background-image: linear-gradient(to right,
+                      var(--tc-indigo-koyu) 0%, #5148D6 50%, #6D28D9 100%);
+    border-color: var(--tc-indigo-koyu);
+}
+
+/* Tablo icindeki butonlar; .btn dolgusu ezildigi icin kucugu de yeniden veriliyor. */
+.btn-sm {
+    padding: .25rem .625rem;
+    font-size: .8125rem;
+}
+
+.btn-outline-secondary {
+    border-color: var(--tc-cizgi);
+    color: var(--tc-ikincil);
+    background: var(--tc-kart);
+}
+
+.btn-outline-secondary:hover {
+    background: var(--tc-zemin);
+    border-color: var(--tc-silik);
+    color: var(--tc-baslik);
+}
+
+.btn-danger {
+    background: var(--tc-tehlike);
+    border-color: var(--tc-tehlike);
+    box-shadow: 0 2px 4px rgba(220, 38, 38, .18), 0 8px 24px rgba(220, 38, 38, .18);
+}
+
+/* Sayfa altinda duran islem cubugu */
+.tc-islem-cubugu {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+    padding-top: .25rem;
+}
+
+/* --------------------------------------------------------------------------
+   Genel
+   -------------------------------------------------------------------------- */
+
+.tc-sayfa { padding: 1.75rem 0 3rem; }
+
+/*
+ * Atmosfer: uc yumusak radyal isik (indigo sol ust, gok mavisi sag alt,
+ * kehribar ortada). Yalnizca giris ekraninda kullanilir; tablo yogun rapor
+ * ekranlarinin arkasinda renkli bir parlama okunabilirligi dusurur.
+ */
+.tc-atmosfer {
+    background-image:
+        radial-gradient(900px 600px at 25% 15%, rgba(79, 70, 229, .22), rgba(0, 0, 0, 0) 60%),
+        radial-gradient(700px 500px at 85% 85%, rgba(14, 165, 233, .16), rgba(0, 0, 0, 0) 60%),
+        radial-gradient(500px 400px at 60% 40%, rgba(217, 119, 6, .08), rgba(0, 0, 0, 0) 60%);
+    background-attachment: fixed;
+}
+
+/* Kartlar arasi bosluk: her karta ayri margin vermek yerine kolon
+   akisi bosluğu yonetiyor, boylece marjlar birbirini yemiyor. */
+.tc-yigin {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.tc-altbilgi {
+    border-top: 1px solid var(--tc-cizgi);
+    padding: 1.25rem 0;
+    color: var(--tc-silik);
+    font-size: .8125rem;
+}
+
+a { text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+:focus-visible {
+    outline: 2px solid var(--tc-indigo);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+}

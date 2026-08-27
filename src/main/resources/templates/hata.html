@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="tr" data-bs-theme="light" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{parcalar/duzen :: kafa('Bir Sorun Oluştu')}"></th:block>
+</head>
+<body>
+
+<th:block th:replace="~{parcalar/duzen :: ustcubuk}"></th:block>
+
+<main class="container-xl tc-sayfa">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <span class="tc-etiket">İŞLEM TAMAMLANAMADI</span>
+            <h1 class="mt-2 mb-3">Bir sorun oluştu</h1>
+
+            <div class="card">
+                <div class="card-body p-4">
+                    <p class="tc-not">
+                        İşlem yarıda kaldı. <strong>Veriniz değişmedi</strong> — araç bir hata
+                        aldığında yaptığı işi geri alır, yarım bir güncelleme bırakmaz.
+                    </p>
+
+                    <div class="tc-kutu tc-kutu-tehlike">
+                        <div class="tc-kutu-baslik" th:text="${hataTipi}">Hata</div>
+                        <div style="word-break:break-word;" th:text="${hataMesaji}">mesaj</div>
+                    </div>
+
+                    <div class="tc-not mt-3">
+                        Hatanın tamamı uygulama günlüğüne (konsola) yazıldı. Sık karşılaşılan iki
+                        sebep: <strong>oturum zaman aşımına uğramış</strong> olabilir — bu durumda
+                        baştan bağlanmak yeterli; ya da seçilen bir kolon beklenen tipte değildir.
+                    </div>
+
+                    <div class="tc-islem-cubugu mt-4">
+                        <a class="btn btn-primary" th:href="@{/tablolar}">Tablo seçimine dön</a>
+                        <a class="btn btn-outline-secondary" th:href="@{/baglan}">Yeniden bağlan</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<th:block th:replace="~{parcalar/duzen :: altbilgi}"></th:block>
+</body>
+</html>
