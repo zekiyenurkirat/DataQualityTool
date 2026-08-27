@@ -103,32 +103,76 @@ Dokuz adımın tamamı sunucuda üretilir. **Uygulamada JavaScript çalışmaz.*
 
 ### Gereksinimler
 
-- Java 21+
-- Maven 3.9+
-- PostgreSQL 13+
+| | Sürüm | Not |
+|---|---|---|
+| **Java** | 21 veya üstü | `java -version` ile kontrol et |
+| **Maven** | 3.9+ | IntelliJ / Eclipse kullanacaksan gerekmez, IDE'ler kendi Maven'ını taşır |
+| **PostgreSQL** | 13+ | İncelenecek veritabanı |
 
 ### 1. `pg_trgm` eklentisini etkinleştir
 
-Benzer kayıt tespiti bu eklentiye bağlıdır. İnceleyeceğin veritabanında **bir kez**
-çalıştır:
+Benzer kayıt tespiti bu eklentiye bağlıdır ve uygulama tarafından kurulmaz. İnceleyeceğin
+veritabanında **bir kez** çalıştır:
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 ```
 
-### 2. Projeyi çalıştır
+### 2. Projeyi al
 
 ```bash
 git clone https://github.com/zekiyenurkirat/DataQualityTool.git
 cd DataQualityTool
+```
+
+### 3. Çalıştır — üç yoldan biri
+
+**A. IDE ile (en kolay)**
+
+IntelliJ IDEA ya da Eclipse'te **File → Open** ile klasörü aç. Maven bağımlılıkları
+kendiliğinden indirilir (ilk seferde birkaç dakika sürebilir). Sonra
+`src/main/java/com/verikalitesi/VeriKalitesiApplication.java` dosyasını açıp
+`main` metodunun yanındaki ▶ düğmesine bas.
+
+**B. Terminalden**
+
+```bash
 mvn spring-boot:run
 ```
 
-Tarayıcıda: **http://localhost:8080/baglan**
+**C. Çalıştırılabilir jar olarak**
 
-### 3. (İsteğe bağlı) Bağlantı formunu önceden doldur
+```bash
+mvn package
+java -jar target/veri-kalite-analizi-1.0-SNAPSHOT.jar
+```
 
-Geliştirme sırasında her seferinde form doldurmamak için
+Üçünde de konsolda şu satırı gördüğünde uygulama hazırdır:
+
+```
+Started VeriKalitesiApplication in 1.8 seconds
+```
+
+### 4. Tarayıcıda aç
+
+**http://localhost:8080/baglan**
+
+Karşına bağlantı formu gelir. Kendi PostgreSQL bilgilerini gir ve **Bağlan**'a bas.
+Sonrasında ekranın üstündeki dokuz adımlık şerit yol gösterir:
+
+1. Tabloyu seç
+2. Hangi kolonun firma adı, e-posta, telefon, adres olduğunu eşleştir
+3. Kalıp kelime ekranında öneriyi onayla
+4. **Analizi başlat** → rapor açılır
+
+> Araç **gömülü veri taşımaz.** İncelenecek veriyi kendi veritabanından okur; boş bir
+> veritabanına bağlanırsan uygulama açılır ama gösterecek bulgu bulamaz.
+
+Durdurmak için konsolda **Ctrl + C**.
+
+### 5. (İsteğe bağlı) Bağlantı formunu önceden doldur
+
+Aynı veritabanıyla sık çalışacaksan her seferinde form doldurmamak için
 `src/main/resources/application-dev.properties` dosyasını oluştur:
 
 ```properties
@@ -142,6 +186,17 @@ dev.sifre=sifre
 > Bu dosya `.gitignore` içindedir ve **depoya girmez.** Oluşturmazsan uygulama yine
 > çalışır, form yalnızca boş gelir.
 
+### Sık karşılaşılan sorunlar
+
+| Belirti | Sebep ve çözüm |
+|---|---|
+| `Web server failed to start. Port 8080 was already in use` | 8080 portu dolu. `application.properties` dosyasına `server.port=8081` ekle. |
+| `function similarity(text, text) does not exist` | `pg_trgm` eklentisi kurulu değil — 1. adımı çalıştır. |
+| `operator class "gin_trgm_ops" does not exist` | Aynı sebep, aynı çözüm. |
+| `invalid target release: 21` | Java sürümü 21'in altında. `java -version` ile kontrol et. |
+| Rapor ekranı uzun sürüyor | İlk çalıştırma trigram indeksini kurar. Sonraki taramalar belirgin şekilde hızlıdır. |
+| Beklenmeyen bir hata | Uygulama beyaz hata sayfası yerine kök nedeni yazan bir ekran gösterir; tam yığın konsoldadır. |
+
 ### Ayarlanabilir eşikler
 
 `src/main/resources/application.properties` içinde, her değerin yanında onu haklı çıkaran
@@ -153,6 +208,14 @@ dev.sifre=sifre
 | `veri.kalipKelimeEnAzDususOrani` | `2.0` | Kalıp kelime tespitinde aranan en küçük frekans düşüşü |
 | `veri.kimlikNoBaskinKalipOrani` | `0.8` | Bir kalıbın "baskın" sayılması için gereken kapsama oranı |
 | `veri.yerTutucular` | liste | Dolu görünen ama bilgi taşımayan değerler |
+
+### Testleri çalıştır
+
+```bash
+mvn test
+```
+
+219 testin tamamı veritabanı gerektirmez; sahte veriyle çalışır.
 
 ---
 
