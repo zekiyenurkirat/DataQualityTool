@@ -41,8 +41,8 @@ build/
 ### Mac OS ###
 .DS_Store
 
-### Claude Code oturum ayarlari — kisisel, repoya girmemeli ###
+### Yerel editor ve arac ayarlari ###
 .claude/
 
-### Staj defteri — sirket ici bilgi icerir, herkese acik olmamali ###
+### Kisisel belgeler ###
 staj-defteri/
